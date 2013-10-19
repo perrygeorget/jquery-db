@@ -1,0 +1,41 @@
+{
+    "name": "jquery.db",
+    "description": "A HTML5 Client Side Database ORM for jQuery based on Hibernate",
+    "version": "0.0.0",
+    "author": {
+        "name": "George Perry",
+        "url": "https://github.com/perrygeorget"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/perrygeorget/jquery-db.git"
+    },
+    "bugs": {
+        "url": "https://github.com/perrygeorget/jquery-db/issues"
+    },
+    "licenses": [
+        {
+            "name": "GPL",
+            "url": "http://www.opensource.org/licenses/GPL-2.0"
+        }
+    ],
+    "keywords": [
+        "orm",
+        "database",
+        "HTML5",
+        "jquery"
+    ],
+    "directories": {
+        "test": "test"
+    },
+    "scripts": {
+        "test": "grunt"
+    },
+    "readmeFilename": "README.md",
+    "devDependencies": {
+        "grunt": "~0.4.1",
+        "grunt-contrib-jshint": "~0.4.0",
+        "grunt-contrib-uglify": "~0.2.0",
+        "grunt-contrib-qunit": "~0.2.0"
+    }
+}
