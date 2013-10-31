@@ -1,4 +1,4 @@
-/*global jQuery, console */
+/*global jQuery, console, SQLStatementCallback, SQLStatementErrorCallback */
 (function ($) {
     "use strict";
 
@@ -204,7 +204,7 @@
              * @param {SQLError} [error]
              */
             var myErrorCallback = function (transaction, error) {
-                console.log("ERROR :: ", error)    ;
+                console.log("ERROR :: ", error);
 
                 if (errorCallback !== undefined) {
                     errorCallback(transaction, error);
@@ -322,6 +322,14 @@
         }
     }
 
+    function JQueryDatabaseException(message) {
+        this.message = message;
+
+        this.toString = function () {
+            return this.message;
+        };
+    }
+
     /**
      * A connection to the database.
      *
@@ -337,27 +345,17 @@
          *
          * @param {Database} database
          * @param {String} sql
-         * @param {Array} args
-         * @param {SQLStatementCallback} callback
-         * @param {SQLStatementErrorCallback} errorCallback
+         * @param {Array} [args]
+         * @param {SQLStatementCallback|Function} [callback]
+         * @param {SQLStatementErrorCallback|Function} [errorCallback]
          */
         function execute(database, sql, args, callback, errorCallback) {
-            /**
-             *
-             * @param {SQLTransaction} [transaction]
-             * @param {SQLResultSet} [resultSet]
-             */
             var myCallback = function (transaction, resultSet) {
                 if (callback !== undefined) {
                     callback(transaction, resultSet);
                 }
             };
 
-            /**
-             *
-             * @param {SQLTransaction} [transaction]
-             * @param {SQLError} [error]
-             */
             var myErrorCallback = function (transaction, error) {
                 if (errorCallback !== undefined) {
                     errorCallback(transaction, error);
@@ -369,7 +367,7 @@
              * @param {SQLTransaction} [tx]
              */
             var caller = function (tx) {
-                console.log("called");
+                args = args || [];
                 tx.executeSql(sql, args, myCallback, myErrorCallback);
             };
 
@@ -378,8 +376,8 @@
 
         /**
          *
-         * @param callback
-         * @returns {Database}
+         * @param {Function} callback
+         * @return {JQueryDatabase}
          */
         this.tables = function (callback) {
             /**
@@ -392,17 +390,18 @@
                 var i, len;
                 len = resultSet.rows.length;
                 for (i = 0; i < len; i = i + 1) {
-                    tables.push(resultSet.rows.item(i));
+                    var item = resultSet.rows.item(i);
+                    if (item.name !== "__WebKitDatabaseInfoTable__") {
+                        tables.push(item.name);
+                    }
                 }
 
-                console.log(tables);
-
-                if (typeof callback === "Function") {
+                if (typeof callback === "function") {
                     callback(tables);
                 }
             };
 
-            var sql = "SELECT * FROM sqlite_master WHERE type='table'";
+            var sql = "SELECT name FROM sqlite_master WHERE type=?";
 
             /**
              *
@@ -413,21 +412,43 @@
                 console.log("error :: " + error.message);
             };
 
-            execute(this.database, sql, [], mySuccessCallback, myErrorCallback);
+            execute(this.database, sql, ["table"], mySuccessCallback, myErrorCallback);
 
             return this;
         };
 
         /**
          *
-         * @param {{name: String, columns: Array, dropOrIgnore: String, success: Function, error: Function}} params
+         * @param {{name: String, [columns]: Array, [dropOrIgnore]: String, [success]: Function, [error]: Function}} params
          * @return {JQueryDatabase}
          */
         this.createTable = function (params) {
             params = params || {};
 
             var tableName = params.name;
-            var columns = params.columns;
+            var columns = params.columns || [];
+
+            var i, column;
+            for (i = 0; i < columns.length; i++) {
+                var columnAtIndex = columns[i];
+                if (typeof  columnAtIndex === "object") {
+                    column = columnAtIndex.name;
+
+                    if (columnAtIndex.hasOwnProperty("type")) {
+                        var typeName = columnAtIndex.type.toUpperCase();
+                        if (typeName === $.db.typeName.text || typeName === $.db.typeName.number || typeName === $.db.typeName.integer || typeName === $.db.typeName.real) {
+                            column = column + " " + typeName;
+                        } else {
+                            throw new JQueryDatabaseException("Unknown type, \"" + typeName + "\"");
+                        }
+                    }
+
+                    if (columnAtIndex.hasOwnProperty("constraint")) {
+
+                    }
+                }
+            }
+
             var dropOrIgnore;
             if (params.hasOwnProperty("dropOrIgnore")) {
                 if (params.dropOrIgnore.toLowerCase() === "drop") {
@@ -454,17 +475,17 @@
             sql = sql + tableName + " (" + columns + ")";
 
             if (dropOrIgnore === "drop") {
-                execute(this.database, [], "DROP TABLE IF EXISTS " + tableName);
+                execute(this.database, "DROP TABLE IF EXISTS " + tableName, []);
             }
 
-            execute(this.database, [], sql, successCallback, errorCallback);
+            execute(this.database, sql, [], successCallback, errorCallback);
 
             return this;
         };
 
         /**
          *
-         * @param {{name: String, ignore: Boolean, success: Function, error: Function}} params
+         * @param {{name: String, [ignore]: Boolean, [success]: Function, [error]: Function}} params
          * @return {JQueryDatabase}
          */
         this.dropTable = function (params) {
@@ -497,7 +518,8 @@
         /**
          * This class is a simplified API for retrieving entities by composing a criterion via chaining.
          *
-         * @return {JQueryDatabaseCriteria}
+         * @param {String} tableName
+         * @returns {JQueryDatabaseCriteria}
          */
         this.criteria = function (tableName) {
             return new JQueryDatabaseCriteria(this, tableName);
@@ -510,7 +532,7 @@
      * @param {String} version
      * @param {String} displayName
      * @param {Number} maxSize
-     * @param {DatabaseCallback|Function} creationCallback
+     * @param {DatabaseCallback|Function} [creationCallback]
      *
      * @returns {undefined|JQueryDatabase}
      */
@@ -531,6 +553,31 @@
         }
 
         return db;
+    };
+
+    $.db.typeName = {
+        text: "TEXT",
+        numeric: "NUM",
+        integer: "INT",
+        real: "REAL",
+        none: ""
+    };
+
+    $.db.columnConstraint = {
+        primaryKey: function (params) {
+        },
+        notNull: function (params) {
+        },
+        unique: function (params) {
+        },
+        check: function (params) {
+        },
+        defaultValue: function (params) {
+        },
+        collate: function (params) {
+        },
+        foreignKey: function (params) {
+        }
     };
 
     /**

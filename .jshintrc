@@ -11,6 +11,21 @@
     "undef": true,
     "globals": {
         "define": true,
-        "jQuery": true
+        "jQuery": true,
+        "$": false,
+        "describe"   : false,
+        "it"         : false,
+        "before"     : false,
+        "beforeEach" : false,
+        "after"      : false,
+        "afterEach"  : false,
+        "module"  : false,
+        "start"  : false,
+        "stop"  : false,
+        "ok": false,
+        "equal": false,
+        "deepEqual": false,
+        "test": false,
+        "asyncTest": false
     }
 }
