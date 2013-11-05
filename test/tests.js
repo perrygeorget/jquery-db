@@ -3,7 +3,7 @@ var version = "";
 var displayName = "Test Databases";
 var maxSize = 1024 * 1024;
 
-module("Creation of a database test");
+module("Creation of a database");
 
 test("Can open database", function () {
     var db = $.db(shortName, version, displayName, maxSize);
@@ -43,7 +43,7 @@ module("Table creation", {
     }
 });
 
-test("Create a table", 1, function () {
+test("Create a table with a simple definition", 1, function () {
     var msg = "should have created a table";
     var db = $.db(shortName, version, displayName, maxSize);
 
@@ -57,8 +57,68 @@ test("Create a table", 1, function () {
             ok(true, msg);
             start();
         },
-        error: function () {
-            ok(false, msg);
+        error: function (transaction, error) {
+            ok(false, msg + " :: " + error.message);
+            start();
+        }
+    });
+}, true);
+
+test("Create a table with a complex column definition", 1, function () {
+    var msg = "should have created a table";
+    var db = $.db(shortName, version, displayName, maxSize);
+
+    db.createTable({
+        name: "MyTestTable",
+        columns: [
+            {
+                name: "id",
+                type: "INTEGER",
+                constraint: "PRIMARY KEY AUTOINCREMENT"
+            },
+            {
+                name: "value",
+                type: "TEXT",
+                constraint: "NOT NULL"
+            }
+        ],
+        success: function () {
+            ok(true, msg);
+            start();
+        },
+        error: function (transaction, error) {
+            ok(false, msg + " :: " + error.message);
+            start();
+        }
+    });
+}, true);
+
+test("Create a table with simple constraints", 1, function () {
+    var msg = "should have created a table";
+    var db = $.db(shortName, version, displayName, maxSize);
+
+    db.createTable({
+        name: "MyTestTable",
+        columns: [
+            {
+                name: "id",
+                type: "INTEGER",
+                constraint: "PRIMARY KEY AUTOINCREMENT"
+            },
+            {
+                name: "value",
+                type: "TEXT"
+            }
+        ],
+        constraints: [
+            "UNIQUE (value)"
+        ],
+        success: function () {
+            ok(true, msg);
+            start();
+        },
+        error: function (transaction, error) {
+            ok(false, msg + " :: " + error.message);
             start();
         }
     });
@@ -153,8 +213,8 @@ test("Drop a table", 1, function () {
             ok(true, msg);
             start();
         },
-        error: function () {
-            ok(false, msg);
+        error: function (transaction, error) {
+            ok(false, msg + " :: " + error.message);
             start();
         }
     });
@@ -179,8 +239,8 @@ test("Can not drop the same table twice", 1, function () {
                 }
             });
         },
-        error: function () {
-            ok(false, msg);
+        error: function (transaction, error) {
+            ok(false, msg + " :: " + error.message);
             start();
         }
     });
@@ -232,8 +292,8 @@ test("Can ignore dropping a table that does not exist", 1, function () {
             ok(true, msg);
             start();
         },
-        error: function () {
-            ok(false, msg);
+        error: function (transaction, error) {
+            ok(false, msg + " :: " + error.message);
             start();
         }
     });

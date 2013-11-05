@@ -225,7 +225,7 @@
         /**
          *
          */
-        this["delete"] = function (callback, successCallback, errorCallback) {
+        this.remove = function (callback, successCallback, errorCallback) {
             var sql = "DELETE FROM " + this.tableName;
             var args = [];
 
@@ -391,7 +391,7 @@
                 len = resultSet.rows.length;
                 for (i = 0; i < len; i = i + 1) {
                     var item = resultSet.rows.item(i);
-                    if (item.name !== "__WebKitDatabaseInfoTable__") {
+                    if (item.name !== "__WebKitDatabaseInfoTable__" && item.name !== "sqlite_sequence") {
                         tables.push(item.name);
                     }
                 }
@@ -419,35 +419,37 @@
 
         /**
          *
-         * @param {{name: String, [columns]: Array, [dropOrIgnore]: String, [success]: Function, [error]: Function}} params
+         * @param {{name: String, [columns]: [{name: String, type: String, [constraint]: String}], [constraints]: Array, [dropOrIgnore]: String, [success]: Function, [error]: Function}} params
          * @return {JQueryDatabase}
          */
         this.createTable = function (params) {
             params = params || {};
 
             var tableName = params.name;
-            var columns = params.columns || [];
+            var columnsAndConstraints = [];
 
-            var i, column;
-            for (i = 0; i < columns.length; i++) {
-                var columnAtIndex = columns[i];
-                if (typeof  columnAtIndex === "object") {
-                    column = columnAtIndex.name;
+            $.each(params.columns, function(index, column) {
+                if (typeof column === "object") {
+                    var columnAsString = column.name;
 
-                    if (columnAtIndex.hasOwnProperty("type")) {
-                        var typeName = columnAtIndex.type.toUpperCase();
-                        if (typeName === $.db.typeName.text || typeName === $.db.typeName.number || typeName === $.db.typeName.integer || typeName === $.db.typeName.real) {
-                            column = column + " " + typeName;
+                    if (column.hasOwnProperty("type")) {
+                        var typeName = column.type.toUpperCase();
+                        if (typeName === $.db.typeName.text || typeName === $.db.typeName.number || typeName === $.db.typeName.int || typeName === $.db.typeName.integer || typeName === $.db.typeName.real) {
+                            columnAsString = columnAsString + " " + typeName;
                         } else {
                             throw new JQueryDatabaseException("Unknown type, \"" + typeName + "\"");
                         }
                     }
 
-                    if (columnAtIndex.hasOwnProperty("constraint")) {
-
+                    if (column.hasOwnProperty("constraint")) {
+                        columnAsString = columnAsString + " " + column.constraint;
                     }
+
+                    columnsAndConstraints.push(columnAsString);
+                } else {
+                    columnsAndConstraints.push(column);
                 }
-            }
+            });
 
             var dropOrIgnore;
             if (params.hasOwnProperty("dropOrIgnore")) {
@@ -472,7 +474,13 @@
                 sql = sql + "IF NOT EXISTS ";
             }
 
-            sql = sql + tableName + " (" + columns + ")";
+            if (params.hasOwnProperty("constraints")) {
+                $.each(params.constraints, function(index, constraint) {
+                    columnsAndConstraints.push(constraint);
+                });
+            }
+
+            sql = sql + tableName + " (" + columnsAndConstraints.join(",") + ")";
 
             if (dropOrIgnore === "drop") {
                 execute(this.database, "DROP TABLE IF EXISTS " + tableName, []);
@@ -558,7 +566,8 @@
     $.db.typeName = {
         text: "TEXT",
         numeric: "NUM",
-        integer: "INT",
+        int: "INT",
+        integer: "INTEGER",
         real: "REAL",
         none: ""
     };
