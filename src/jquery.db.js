@@ -69,7 +69,7 @@
         /**
          *
          */
-        this.list = function (callback, successCallback, errorCallback) {
+        this.list = function (successCallback, errorCallback) {
             var sql = "SELECT _ROWID_, * FROM " + this.tableName;
             var args = [];
 
@@ -113,10 +113,10 @@
                     data.push(resultSet.rows.item(i));
                 }
 
-                console.log("DATA :: ", data);
+                console.log("DATA :: ", JSON.stringify(data));
 
-                if (callback !== undefined) {
-                    callback(transaction, resultSet);
+                if (successCallback !== undefined) {
+                    successCallback(transaction, resultSet);
                 }
             };
 
@@ -147,7 +147,7 @@
         /**
          *
          */
-        this.count = function (callback, successCallback, errorCallback) {
+        this.count = function (successCallback, errorCallback) {
             var sql = "SELECT COUNT(*) AS count FROM " + this.tableName;
             var args = [];
 
@@ -193,8 +193,8 @@
 
                 console.log("DATA :: ", data);
 
-                if (callback !== undefined) {
-                    callback(transaction, resultSet);
+                if (successCallback !== undefined) {
+                    successCallback(transaction, resultSet);
                 }
             };
 
@@ -500,11 +500,14 @@
             params = params || {};
 
             var tableName = params.name;
+
             var ignore = params.hasOwnProperty("ignore") && params.ignore;
+
             var successCallback;
             if (params.hasOwnProperty("success")) {
                 successCallback = params.success;
             }
+
             var errorCallback;
             if (params.hasOwnProperty("error")) {
                 errorCallback = params.error;
@@ -519,6 +522,42 @@
             sql = sql + tableName;
 
             execute(this.database, sql, [], successCallback, errorCallback);
+
+            return this;
+        };
+
+        /**
+         *
+         * @param {String} tableName
+         * @param {{data: {}, [success]: Function, [error]: Function}} params
+         * @returns {JQueryDatabase}
+         */
+        this.insert = function (tableName, params) {
+            params = params || {};
+
+            var values = [];
+            var columns = [];
+            var placeholders = [];
+
+            $.each(params.data, function (index, obj) {
+                placeholders.push("?");
+                values.push(obj);
+                columns.push(index);
+            });
+
+            var successCallback;
+            if (params.hasOwnProperty("success")) {
+                successCallback = params.success;
+            }
+
+            var errorCallback;
+            if (params.hasOwnProperty("error")) {
+                errorCallback = params.error;
+            }
+
+            var sql = "INSERT INTO " + tableName + " (" + columns.join(",") + ") VALUES (" + placeholders.join(",") + ")";
+
+            execute(this.database, sql, values, successCallback, errorCallback);
 
             return this;
         };

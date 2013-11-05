@@ -493,3 +493,93 @@ test("Has the expected tables", 1, function () {
         }
     });
 }, true);
+
+
+module("Can insert data", {
+    setup: function () {
+        stop(1);
+        var db = $.db(shortName, version, displayName, maxSize);
+        db.dropTable({
+            name: "MyTestTable",
+            ignore: true,
+            success: function () {
+                db.createTable({
+                    name: "MyTestTable",
+                    columns: [
+                        {
+                            name: "id",
+                            type: "INTEGER",
+                            constraint: "PRIMARY KEY AUTOINCREMENT"
+                        },
+                        {
+                            name: "value",
+                            type: "TEXT",
+                            constraint: "NOT NULL"
+                        }
+                    ],
+                    success: function () {
+                        start();
+                    },
+                    error: function (transaction, error) {
+                        start();
+                    }
+                });
+            },
+            failure: function () {
+                start();
+            }
+        });
+    },
+    teardown: function () {
+        stop(1);
+        $.db(shortName, version, displayName, maxSize)
+            .dropTable({
+                name: "MyTestTable",
+                ignore: true,
+                success: function () {
+                    start();
+                },
+                failure: function () {
+                    start();
+                }
+            });
+    }
+});
+
+test("Can insert data into table that exists", 4, function () {
+    var db = $.db(shortName, version, displayName, maxSize);
+    var tableName = "MyTestTable";
+    var value = "hello world";
+
+    stop();
+    db.insert(tableName, {
+        data: {
+            value: value
+        },
+        success: function (transaction, results) {
+            var id = results.insertId;
+            var affected = results.rowsAffected;
+
+            equal(affected, 1, "should be able to insert data");
+            ok(typeof id !== "undefined", "has an unique id");
+
+            db.criteria(tableName).list(function (transaction, results) {
+                var rows = results.rows;
+
+                equal(rows.length, 1, "should be 1 row in the table");
+
+                var row = rows.item(0);
+                equal(row.value, value, "expected the inserted value");
+                start();
+            }, function (transaction, error) {
+                ok(false, error.message);
+                start();
+            });
+            start();
+        },
+        failure: function (transaction, error) {
+            ok(false, error.message);
+            start(2);
+        }
+    });
+});
