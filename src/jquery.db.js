@@ -5,12 +5,12 @@
     /**
      * This class is a simplified API for retrieving entities by composing a criterion via chaining.
      *
-     * @param {JQueryDatabase} database
+     * @param {JQueryDatabase} db
      * @param {String} tableName
      * @constructor
      */
-    function JQueryDatabaseCriteria(database, tableName) {
-        this.database = database;
+    function JQueryDatabaseCriteria(db, tableName) {
+        this.db = db;
         this.tableName = tableName;
 
         this.maxResults = undefined;
@@ -141,7 +141,7 @@
                 tx.executeSql(sql, args, myCallback, myErrorCallback);
             };
 
-            this.database.database.transaction(caller);
+            this.db.database.transaction(caller);
         };
 
         /**
@@ -219,7 +219,7 @@
                 tx.executeSql(sql, args, myCallback, myErrorCallback);
             };
 
-            this.database.database.transaction(caller);
+            this.db.database.transaction(caller);
         };
 
         /**
@@ -277,7 +277,7 @@
                 tx.executeSql(sql, args, myCallback, myErrorCallback);
             };
 
-            this.database.database.transaction(caller);
+            this.db.database.transaction(caller);
         };
     }
 
@@ -338,6 +338,9 @@
      * @constructor
      */
     function JQueryDatabase(database, shortName) {
+        this.typeName = $.db.typeName;
+        this.restriction = $.db.restriction;
+
         this.database = database;
         this.shortName = shortName;
 
@@ -428,7 +431,7 @@
             var tableName = params.name;
             var columnsAndConstraints = [];
 
-            $.each(params.columns, function(index, column) {
+            $.each(params.columns, function (index, column) {
                 if (typeof column === "object") {
                     var columnAsString = column.name;
 
@@ -475,7 +478,7 @@
             }
 
             if (params.hasOwnProperty("constraints")) {
-                $.each(params.constraints, function(index, constraint) {
+                $.each(params.constraints, function (index, constraint) {
                     columnsAndConstraints.push(constraint);
                 });
             }
@@ -566,10 +569,12 @@
          * This class is a simplified API for retrieving entities by composing a criterion via chaining.
          *
          * @param {String} tableName
-         * @returns {JQueryDatabaseCriteria}
+         * @param {Function} callback
+         * @returns {JQueryDatabase}
          */
-        this.criteria = function (tableName) {
-            return new JQueryDatabaseCriteria(this, tableName);
+        this.criteria = function (tableName, callback) {
+            callback(new JQueryDatabaseCriteria(this, tableName));
+            return this;
         };
     }
 
@@ -679,7 +684,7 @@
         // and: function (criterionA, criterionB) {},
 
         between: function (property, lowValue, highValue) {
-            return new JQueryDatabaseRestriction(property + " BETWEEN ? AND ? ", [lowValue, highValue]);
+            return new JQueryDatabaseRestriction(property + " BETWEEN ? AND ?", [lowValue, highValue]);
         },
 
         // conjunction: function() {},
@@ -724,11 +729,11 @@
          * Apply a "greater than or equal" constraint to two properties
          *
          * @param {String} property
-         * @param {*} value
+         * @param {String} otherProperty
          * @returns {JQueryDatabaseRestriction}
          */
-        geProperty: function (property, value) {
-            return new JQueryDatabaseRestriction(property + " >= ? ", [value]);
+        geProperty: function (property, otherProperty) {
+            return new JQueryDatabaseRestriction(property + " >= " + otherProperty);
         },
 
         /**
@@ -747,11 +752,11 @@
          * Apply a "greater than" constraint to two properties
          *
          * @param property
-         * @param value
+         * @param {String} otherProperty
          * @returns {JQueryDatabaseRestriction}
          */
-        gtProperty: function (property, value) {
-            return new JQueryDatabaseRestriction(property + " > ?", [value]);
+        gtProperty: function (property, otherProperty) {
+            return new JQueryDatabaseRestriction(property + " > " + otherProperty);
         },
 
         /**
@@ -761,7 +766,7 @@
          * @returns {JQueryDatabaseRestriction}
          */
         idEq: function (value) {
-            return new JQueryDatabaseRestriction("_ROWID_ = ", [value]);
+            return new JQueryDatabaseRestriction("_ROWID_ = ?", [value]);
         },
 
         // See: http://www.sqlite.org/pragma.html#pragma_case_sensitive_like
@@ -840,11 +845,11 @@
          * Apply a "less than or equal" constraint to two properties
          *
          * @param {String} property
-         * @param {*} value
+         * @param {String} otherProperty
          * @returns {JQueryDatabaseRestriction}
          */
-        leProperty: function (property, value) {
-            return new JQueryDatabaseRestriction(property + " <= ? ", [value]);
+        leProperty: function (property, otherProperty) {
+            return new JQueryDatabaseRestriction(property + " <= " + otherProperty);
         },
 
         /**
@@ -854,7 +859,7 @@
          * @param {*} value
          */
         like: function (property, value) {
-            return new JQueryDatabaseRestriction(property + " LIKE ? ", [value]);
+            return new JQueryDatabaseRestriction(property + " LIKE ?", [value]);
         },
 
         /**
@@ -873,11 +878,11 @@
          * Apply a "greater than" constraint to two properties
          *
          * @param property
-         * @param value
+         * @param {String} otherProperty
          * @returns {JQueryDatabaseRestriction}
          */
-        ltProperty: function (property, value) {
-            return new JQueryDatabaseRestriction(property + " < ?", [value]);
+        ltProperty: function (property, otherProperty) {
+            return new JQueryDatabaseRestriction(property + " < " + otherProperty);
         },
 
         /**
@@ -896,11 +901,11 @@
          * Apply a "not equal" constraint to two properties
          *
          * @param property
-         * @param value
+         * @param {String} otherProperty
          * @returns {JQueryDatabaseRestriction}
          */
-        neProperty: function (property, value) {
-            return new JQueryDatabaseRestriction(property + " != ?", [value]);
+        neProperty: function (property, otherProperty) {
+            return new JQueryDatabaseRestriction(property + " != " + otherProperty);
         }
 
         // not: function (criterion) {}
