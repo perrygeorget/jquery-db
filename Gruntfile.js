@@ -19,6 +19,22 @@ module.exports = function (grunt) {
                 dest: 'build/<%= pkg.name %>.<%= pkg.version %>.min.js'
             }
         },
+        clean: [
+            'build',
+            'dist'
+        ],
+        copy: {
+            main: {
+                flatten: true,
+                expand: true,
+                cwd: 'build/',
+                src: [
+                    '<%= pkg.name %>.<%= pkg.version %>.min.js',
+                    '<%= pkg.name %>.<%= pkg.version %>.map'
+                ],
+                dest: 'dist/'
+            }
+        },
         jshint: {
             files: [
                 'Gruntfile.js',
@@ -41,7 +57,9 @@ module.exports = function (grunt) {
     }
 
     // Default task(s).
-    grunt.registerTask('default', ['jshint', 'qunit', 'uglify']);
+    grunt.registerTask('default', ['jshint', 'qunit', 'clean', 'uglify']);
 
     grunt.registerTask('test', ['jshint', 'qunit']);
+
+    grunt.registerTask('dist', ['jshint', 'qunit', 'clean', 'uglify', 'copy']);
 };
