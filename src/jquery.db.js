@@ -1,5 +1,5 @@
 /*global jQuery, console, SQLStatementCallback, SQLStatementErrorCallback */
-(function ($) {
+(function (jQuery) {
     "use strict";
 
     /**
@@ -79,7 +79,7 @@
             }
             if (this.order.length > 0) {
                 var order = [];
-                $.each(this.order, function (index, obj) {
+                jQuery.each(this.order, function (index, obj) {
 
                 });
                 sql = sql + " ORDER BY " + this.order.join(",");
@@ -146,7 +146,7 @@
 
             if (this.restrictions.length > 0) {
                 var where = [];
-                $.each(this.restrictions, function (index, obj) {
+                jQuery.each(this.restrictions, function (index, obj) {
                     where.push(obj.expr);
                     var i;
                     for (i = 0; i < obj.args.length; i = i + 1) {
@@ -157,7 +157,7 @@
             }
             if (this.order.length > 0) {
                 var order = [];
-                $.each(this.order, function (index, obj) {
+                jQuery.each(this.order, function (index, obj) {
 
                 });
                 sql = sql + " ORDER BY " + this.order.join(",");
@@ -224,7 +224,7 @@
 
             if (this.restrictions.length > 0) {
                 var where = [];
-                $.each(this.restrictions, function (index, obj) {
+                jQuery.each(this.restrictions, function (index, obj) {
                     where.push(obj.expr);
                     var i;
                     for (i = 0; i < obj.args.length; i = i + 1) {
@@ -282,7 +282,7 @@
         this._getWhereClause = function (args) {
             var whereClause;
             var where = [];
-            $.each(this.restrictions, function (index, obj) {
+            jQuery.each(this.restrictions, function (index, obj) {
                 where.push(obj.expr);
                 var i;
                 for (i = 0; i < obj.args.length; i = i + 1) {
@@ -351,8 +351,8 @@
      * @constructor
      */
     function JQueryDatabase(database, shortName) {
-        this.typeName = $.db.typeName;
-        this.restriction = $.db.restriction;
+        this.typeName = jQuery.db.typeName;
+        this.restriction = jQuery.db.restriction;
 
         this.database = database;
         this.shortName = shortName;
@@ -444,13 +444,13 @@
             var tableName = params.name;
             var columnsAndConstraints = [];
 
-            $.each(params.columns, function (index, column) {
+            jQuery.each(params.columns, function (index, column) {
                 if (typeof column === "object") {
                     var columnAsString = column.name;
 
                     if (column.hasOwnProperty("type")) {
                         var typeName = column.type.toUpperCase();
-                        if (typeName === $.db.typeName.text || typeName === $.db.typeName.number || typeName === $.db.typeName.int || typeName === $.db.typeName.integer || typeName === $.db.typeName.real) {
+                        if (typeName === jQuery.db.typeName.text || typeName === jQuery.db.typeName.number || typeName === jQuery.db.typeName.int || typeName === jQuery.db.typeName.integer || typeName === jQuery.db.typeName.real) {
                             columnAsString = columnAsString + " " + typeName;
                         } else {
                             throw new JQueryDatabaseException("Unknown type, \"" + typeName + "\"");
@@ -491,7 +491,7 @@
             }
 
             if (params.hasOwnProperty("constraints")) {
-                $.each(params.constraints, function (index, constraint) {
+                jQuery.each(params.constraints, function (index, constraint) {
                     columnsAndConstraints.push(constraint);
                 });
             }
@@ -555,7 +555,7 @@
             var columns = [];
             var placeholders = [];
 
-            $.each(params.data, function (index, obj) {
+            jQuery.each(params.data, function (index, obj) {
                 placeholders.push("?");
                 values.push(obj);
                 columns.push(index);
@@ -599,7 +599,7 @@
      *
      * @returns {undefined|JQueryDatabase}
      */
-    $.db = function (shortName, version, displayName, maxSize, creationCallback) {
+    jQuery.db = function (shortName, version, displayName, maxSize, creationCallback) {
         var db;
         if (!window.openDatabase) {
             db = undefined;
@@ -618,7 +618,7 @@
         return db;
     };
 
-    $.db.typeName = {
+    jQuery.db.typeName = {
         text: "TEXT",
         numeric: "NUM",
         int: "INT",
@@ -627,7 +627,7 @@
         none: ""
     };
 
-    $.db.columnConstraint = {
+    jQuery.db.columnConstraint = {
         primaryKey: function (params) {
         },
         notNull: function (params) {
@@ -651,11 +651,11 @@
      * @param {Boolean} isAscending
      * @return JQueryDatabaseOrder
      */
-    $.db.order = function (property, isAscending) {
+    jQuery.db.order = function (property, isAscending) {
         return new JQueryDatabaseOrder(property, isAscending);
     };
 
-    $.extend($.db.order, {
+    jQuery.extend(jQuery.db.order, {
         /**
          * Ascending order
          *
@@ -663,7 +663,7 @@
          * @returns {JQueryDatabaseOrder}
          */
         asc: function (property) {
-            return $.db.order(property, "ASC");
+            return jQuery.db.order(property, "ASC");
         },
 
         /**
@@ -673,7 +673,7 @@
          * @returns {JQueryDatabaseOrder}
          */
         desc: function (property) {
-            return $.db.order(property, "DESC");
+            return jQuery.db.order(property, "DESC");
         }
     });
 
@@ -684,11 +684,11 @@
      * @param {Array} args
      * @returns {JQueryDatabaseRestriction}
      */
-    $.db.restriction = function (expr, args) {
+    jQuery.db.restriction = function (expr, args) {
         return new JQueryDatabaseRestriction(expr, args);
     };
 
-    $.extend($.db.restriction, {
+    jQuery.extend(jQuery.db.restriction, {
         /**
          * Apply an "equals" constraint to each property in the key set of an object
          *
@@ -698,7 +698,7 @@
         allEq: function (object) {
             var where = [];
             var values = [];
-            $.each(object, function(key, value) {
+            jQuery.each(object, function(key, value) {
                 where.push(key + " = ?");
                 values.push(value);
             });
@@ -824,7 +824,7 @@
          */
         "in": function (property, values) {
             var placeholders = [];
-            $.each(values, function () {
+            jQuery.each(values, function () {
                 placeholders.push("?");
             });
 
