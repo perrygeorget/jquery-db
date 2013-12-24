@@ -11,7 +11,7 @@ A HTML5 Client Side Database ORM for jQuery based on Hibernate
 	<script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
 	<script src="https://raw.github.com/perrygeorget/jquery-db/dist/jquery.db.0.0.1.min.js"></script>
 	
-[Download the distribution](https://github.com/perrygeorget/jquery-db/dist) and get started!
+[Download the distribution](https://github.com/perrygeorget/jquery-db/tree/master/dist) and get started!
 		
 ## Getting Started
 
