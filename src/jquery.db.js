@@ -74,15 +74,8 @@
             var args = [];
 
             if (this.restrictions.length > 0) {
-                var where = [];
-                $.each(this.restrictions, function (index, obj) {
-                    where.push(obj.expr);
-                    var i;
-                    for (i = 0; i < obj.args.length; i = i + 1) {
-                        args.push(obj.args[i]);
-                    }
-                });
-                sql = sql + " WHERE " + where.join(" AND ");
+                var whereClause = this._getWhereClause(args);
+                sql = sql + " WHERE " + whereClause;
             }
             if (this.order.length > 0) {
                 var order = [];
@@ -98,7 +91,7 @@
                 sql = sql + " OFFSET " + this.firstResult;
             }
 
-            console.log(sql, args);
+            // console.log(sql, args);
 
             /**
              *
@@ -113,7 +106,7 @@
                     data.push(resultSet.rows.item(i));
                 }
 
-                console.log("DATA :: ", JSON.stringify(data));
+                // console.log("DATA :: ", JSON.stringify(data));
 
                 if (successCallback !== undefined) {
                     successCallback(transaction, resultSet);
@@ -126,7 +119,7 @@
              * @param {SQLError} [error]
              */
             var myErrorCallback = function (transaction, error) {
-                console.log("ERROR :: ", error);
+                // console.log("ERROR :: ", error);
 
                 if (errorCallback !== undefined) {
                     errorCallback(transaction, error);
@@ -176,7 +169,7 @@
                 sql = sql + " OFFSET " + this.firstResult;
             }
 
-            console.log(sql, args);
+            // console.log(sql, args);
 
             /**
              *
@@ -191,7 +184,7 @@
                     data.push(resultSet.rows.item(i));
                 }
 
-                console.log("DATA :: ", data);
+                // console.log("DATA :: ", data);
 
                 if (successCallback !== undefined) {
                     successCallback(transaction, resultSet);
@@ -204,7 +197,7 @@
              * @param {SQLError} [error]
              */
             var myErrorCallback = function (transaction, error) {
-                console.log("ERROR :: ", error);
+                // console.log("ERROR :: ", error);
 
                 if (errorCallback !== undefined) {
                     errorCallback(transaction, error);
@@ -241,7 +234,7 @@
                 sql = sql + " WHERE " + where.join(" AND ");
             }
 
-            console.log(sql, args);
+            // console.log(sql, args);
 
             /**
              *
@@ -249,7 +242,7 @@
              * @param {SQLResultSet} [resultSet]
              */
             var myCallback = function (transaction, resultSet) {
-                console.log("SUCCESS :: ", resultSet.rowsAffected);
+                // console.log("SUCCESS :: ", resultSet.rowsAffected);
 
                 if (callback !== undefined) {
                     callback(transaction, resultSet);
@@ -262,7 +255,7 @@
              * @param {SQLError} [error]
              */
             var myErrorCallback = function (transaction, error) {
-                console.log("ERROR :: ", error);
+                // console.log("ERROR :: ", error);
 
                 if (errorCallback !== undefined) {
                     errorCallback(transaction, error);
@@ -278,6 +271,26 @@
             };
 
             this.db.database.transaction(caller);
+        };
+
+        /**
+         *
+         * @param {Array} args
+         * @returns {string} where clause
+         * @protected
+         */
+        this._getWhereClause = function (args) {
+            var whereClause;
+            var where = [];
+            $.each(this.restrictions, function (index, obj) {
+                where.push(obj.expr);
+                var i;
+                for (i = 0; i < obj.args.length; i = i + 1) {
+                    args.push(obj.args[i]);
+                }
+            });
+            whereClause = where.join(" AND ");
+            return whereClause;
         };
     }
 
@@ -412,7 +425,7 @@
              * @param {SQLError} error
              */
             var myErrorCallback = function (transaction, error) {
-                console.log("error :: " + error.message);
+                // console.log("error :: " + error.message);
             };
 
             execute(this.database, sql, ["table"], mySuccessCallback, myErrorCallback);
@@ -569,12 +582,10 @@
          * This class is a simplified API for retrieving entities by composing a criterion via chaining.
          *
          * @param {String} tableName
-         * @param {Function} callback
          * @returns {JQueryDatabase}
          */
-        this.criteria = function (tableName, callback) {
-            callback(new JQueryDatabaseCriteria(this, tableName));
-            return this;
+        this.criteria = function (tableName) {
+            return new JQueryDatabaseCriteria(this, tableName);
         };
     }
 
@@ -598,7 +609,7 @@
                 db = new JQueryDatabase(openDB, shortName);
             } else {
                 if (window.console) {
-                    console.log("HTML5 DB Unavailable");
+                    // console.log("HTML5 DB Unavailable");
                 }
                 db = undefined;
             }
@@ -642,7 +653,6 @@
      */
     $.db.order = function (property, isAscending) {
         return new JQueryDatabaseOrder(property, isAscending);
-
     };
 
     $.extend($.db.order, {
@@ -679,10 +689,44 @@
     };
 
     $.extend($.db.restriction, {
-        // allEq: function (object) {},
+        /**
+         * Apply an "equals" constraint to each property in the key set of an object
+         *
+         * @param object
+         * @returns {JQueryDatabaseRestriction}
+         */
+        allEq: function (object) {
+            var where = [];
+            var values = [];
+            $.each(object, function(key, value) {
+                where.push(key + " = ?");
+                values.push(value);
+            });
+            return new JQueryDatabaseRestriction("(" + where.join(" AND ") + ")", values);
+        },
 
-        // and: function (criterionA, criterionB) {},
+        /**
+         * Return the conjuction of two expressions
+         *
+         * @param {JQueryDatabaseCriteria} criteriaA
+         * @param {JQueryDatabaseCriteria} criteriaB
+         * @returns {JQueryDatabaseRestriction}
+         */
+        and: function (criteriaA, criteriaB) {
+            var args = [];
+            var a = criteriaA._getWhereClause(args);
+            var b = criteriaB._getWhereClause(args);
+            return new JQueryDatabaseRestriction("(" + a + ") AND (" + b + ")", args);
+        },
 
+        /**
+         * Apply a "between" constraint to the named property
+         *
+         * @param {String} property
+         * @param {*} lowValue
+         * @param {*} highValue
+         * @returns {JQueryDatabaseRestriction}
+         */
         between: function (property, lowValue, highValue) {
             return new JQueryDatabaseRestriction(property + " BETWEEN ? AND ?", [lowValue, highValue]);
         },
@@ -724,7 +768,6 @@
             return new JQueryDatabaseRestriction(property + " >= ?", [value]);
         },
 
-
         /**
          * Apply a "greater than or equal" constraint to two properties
          *
@@ -746,7 +789,6 @@
         gt: function (property, value) {
             return new JQueryDatabaseRestriction(property + " > ?", [value]);
         },
-
 
         /**
          * Apply a "greater than" constraint to two properties
@@ -840,7 +882,6 @@
             return new JQueryDatabaseRestriction(property + " <= ?", [value]);
         },
 
-
         /**
          * Apply a "less than or equal" constraint to two properties
          *
@@ -873,7 +914,6 @@
             return new JQueryDatabaseRestriction(property + " < ?", [value]);
         },
 
-
         /**
          * Apply a "greater than" constraint to two properties
          *
@@ -896,7 +936,6 @@
             return new JQueryDatabaseRestriction(property + " != ?", [value]);
         },
 
-
         /**
          * Apply a "not equal" constraint to two properties
          *
@@ -906,10 +945,33 @@
          */
         neProperty: function (property, otherProperty) {
             return new JQueryDatabaseRestriction(property + " != " + otherProperty);
+        },
+
+        /**
+         * Return the negation of an expression
+         *
+         * @param {JQueryDatabaseCriteria} criteria
+         * @returns {JQueryDatabaseRestriction}
+         */
+        not: function (criteria) {
+            var args = [];
+            var where = criteria._getWhereClause(args);
+            return new JQueryDatabaseRestriction("NOT (" + where + ")", args);
+        },
+
+        /**
+         * Return the disjuction of two expressions
+         *
+         * @param {JQueryDatabaseCriteria} criteriaA
+         * @param {JQueryDatabaseCriteria} criteriaB
+         * @returns {JQueryDatabaseRestriction}
+         */
+        or: function (criteriaA, criteriaB) {
+            var args = [];
+            var a = criteriaA._getWhereClause(args);
+            var b = criteriaB._getWhereClause(args);
+            return new JQueryDatabaseRestriction("(" + a + ") OR (" + b + ")", args);
         }
 
-        // not: function (criterion) {}
-
-        // or: function (criterionA, criterionB) {},
     });
 }(jQuery));

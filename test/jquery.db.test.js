@@ -558,23 +558,21 @@ test("Can insert data into table that exists", 4, function () {
             equal(affected, 1, "should be able to insert data");
             ok(typeof id !== "undefined", "has an unique id");
 
-            db.criteria(tableName, function (criteria) {
-                criteria.list(
-                    function (transaction, results) {
-                        var rows = results.rows;
-                        equal(rows.length, 1, "should be 1 row in the table");
+            db.criteria(tableName).list(
+                function (transaction, results) {
+                    var rows = results.rows;
+                    equal(rows.length, 1, "should be 1 row in the table");
 
-                        var row = rows.item(0);
-                        equal(row.value, value, "expected the inserted value");
+                    var row = rows.item(0);
+                    equal(row.value, value, "expected the inserted value");
 
-                        start();
-                    },
-                    function (transaction, error) {
-                        ok(false, error.message);
-                        start();
-                    }
-                );
-            });
+                    start();
+                },
+                function (transaction, error) {
+                    ok(false, error.message);
+                    start();
+                }
+            );
             start();
         },
         failure: function (transaction, error) {
@@ -631,6 +629,50 @@ test("Has none type name", function() {
 });
 
 module("Restrictions generate correct SQL snippets");
+
+test("Restriction allEq -- complex", function() {
+    var restriction = $.db.restriction.allEq({
+        name: "Peppercock",
+        rank: "Private",
+        serial_number: "8675309"
+    });
+    equal(restriction.expr, "(name = ? AND rank = ? AND serial_number = ?)", "Expression should match");
+    deepEqual(restriction.args, ["Peppercock", "Private", "8675309"], "Arguments should match");
+
+    var db = $.db(shortName, version, displayName, maxSize);
+    var restrictionFromInstance = db.restriction.allEq({
+        name: "Peppercock",
+        rank: "Private",
+        serial_number: "8675309"
+    });
+    equal(restrictionFromInstance.expr, "(name = ? AND rank = ? AND serial_number = ?)", "Expression should match");
+    deepEqual(restrictionFromInstance.args, ["Peppercock", "Private", "8675309"], "Arguments should match");
+});
+
+test("Restriction and -- complex", function() {
+    var db = $.db(shortName, version, displayName, maxSize);
+    var tableName = "MyTestTable";
+
+    var callback = function (criteria) {
+        window.console.log("criteria hit");
+    };
+
+    var criteriaA = db.criteria(tableName, callback);
+    var criteriaB = db.criteria(tableName, callback);
+
+    criteriaA.add(db.restriction.eq("a", "a"));
+    criteriaA.add(db.restriction.eq("b", "b"));
+
+    criteriaB.add(db.restriction.eq("c", "c")).add(db.restriction.eq("d", "d"));
+
+    var restriction = $.db.restriction.and(criteriaA, criteriaB);
+    equal(restriction.expr, "(a = ? AND b = ?) AND (c = ? AND d = ?)", "Expression should match");
+    deepEqual(restriction.args, ["a", "b", "c", "d"], "Arguments should match");
+
+    var restrictionFromInstance = db.restriction.and(criteriaA, criteriaB);
+    equal(restrictionFromInstance.expr, "(a = ? AND b = ?) AND (c = ? AND d = ?)", "Expression should match");
+    deepEqual(restrictionFromInstance.args, ["a", "b", "c", "d"], "Arguments should match");
+});
 
 test("Restriction between", function() {
     var restriction = $.db.restriction.between("high_noon", 11, 13);
@@ -852,18 +894,56 @@ test("Restriction neProperty", function() {
     deepEqual(restrictionFromInstance.args, [], "Arguments should match");
 });
 
+test("Restriction not -- complex", function() {
+    var db = $.db(shortName, version, displayName, maxSize);
+    var tableName = "MyTestTable";
+
+    var callback = function (criteria) {
+        window.console.log("criteria hit");
+    };
+
+    var criteriaA = db.criteria(tableName, callback);
+
+    criteriaA.add(db.restriction.eq("a", "a")).add(db.restriction.eq("b", "b"));
+
+    var restriction = $.db.restriction.not(criteriaA);
+    equal(restriction.expr, "NOT (a = ? AND b = ?)", "Expression should match");
+    deepEqual(restriction.args, ["a", "b"], "Arguments should match");
+
+    var restrictionFromInstance = db.restriction.not(criteriaA);
+    equal(restrictionFromInstance.expr, "NOT (a = ? AND b = ?)", "Expression should match");
+    deepEqual(restrictionFromInstance.args, ["a", "b"], "Arguments should match");
+});
+
+test("Restriction or -- complex", function() {
+    var db = $.db(shortName, version, displayName, maxSize);
+    var tableName = "MyTestTable";
+
+    var callback = function (criteria) {
+        window.console.log("criteria hit");
+    };
+
+    var criteriaA = db.criteria(tableName, callback);
+    var criteriaB = db.criteria(tableName, callback);
+
+    criteriaA.add(db.restriction.eq("a", "a"));
+    criteriaA.add(db.restriction.eq("b", "b"));
+
+    criteriaB.add(db.restriction.eq("c", "c")).add(db.restriction.eq("d", "d"));
+
+    var restriction = $.db.restriction.or(criteriaA, criteriaB);
+    equal(restriction.expr, "(a = ? AND b = ?) OR (c = ? AND d = ?)", "Expression should match");
+    deepEqual(restriction.args, ["a", "b", "c", "d"], "Arguments should match");
+
+    var restrictionFromInstance = db.restriction.or(criteriaA, criteriaB);
+    equal(restrictionFromInstance.expr, "(a = ? AND b = ?) OR (c = ? AND d = ?)", "Expression should match");
+    deepEqual(restrictionFromInstance.args, ["a", "b", "c", "d"], "Arguments should match");
+});
+
 /*
-test("Restriction allEq -- complex", function() {});
-
-test("Restriction and -- complex", function() {});
-
 test("Restriction conjunction -- complex", function() {});
 
 test("Restriction disjunction -- complex", function() {});
-
-test("Restriction not -- complex", function() {});
-
-test("Restriction or -- complex", function() {});
 */
 
 module("Can select data", {
@@ -989,42 +1069,34 @@ test("Can select everything", 1, function() {
     var db = $.db(shortName, version, displayName, maxSize);
     var tableName = "MyTestTable";
 
-    var callback = function (criteria) {
-        var success = function (transaction, resultSet) {
-            equal(resultSet.rows.length, 4, "Expected 4 records");
-            start();
-        };
-
-        var error = function (transaction, error) {
-            ok(false, error.message);
-            start();
-        };
-
-        criteria.list(success, error);
+    var success = function (transaction, resultSet) {
+        equal(resultSet.rows.length, 4, "Expected 4 records");
+        start();
     };
 
-    db.criteria(tableName, callback);
+    var error = function (transaction, error) {
+        ok(false, error.message);
+        start();
+    };
+
+    db.criteria(tableName).list(success, error);
 }, true);
 
 test("Can select John Doe", 2, function() {
     var db = $.db(shortName, version, displayName, maxSize);
     var tableName = "MyTestTable";
 
-    var callback = function (criteria) {
-        var success = function (transaction, resultSet) {
-            equal(resultSet.rows.length, 1, "Expected 1 records");
-            var item = resultSet.rows.item(0);
-            equal(item.name, "Jackie Robinson", "This should be the record for Jackie Robinson");
-            start();
-        };
-
-        var error = function (transaction, error) {
-            ok(false, error.message);
-            start();
-        };
-
-        criteria.add($.db.restriction.eq("name", "Jackie Robinson")).list(success, error);
+    var success = function (transaction, resultSet) {
+        equal(resultSet.rows.length, 1, "Expected 1 records");
+        var item = resultSet.rows.item(0);
+        equal(item.name, "Jackie Robinson", "This should be the record for Jackie Robinson");
+        start();
     };
 
-    db.criteria(tableName, callback);
+    var error = function (transaction, error) {
+        ok(false, error.message);
+        start();
+    };
+
+    db.criteria(tableName).add($.db.restriction.eq("name", "Jackie Robinson")).list(success, error);
 }, true);
