@@ -1,0 +1,11 @@
+{
+    "source": {
+        "include": ["./src/"]
+    },
+    "opts": {
+        "encoding": "utf8",
+        "destination": "./doc/",
+        "private": true,
+        "lenient": true
+    }
+}

@@ -101,6 +101,17 @@ Outputs:
 
 ### Creating a Database
 
+As described in the Getting Started section of this document, creating a database is very easy.
+
+	var db = $.db("people", "1.0", "People Database", 1024 * 1024);
+
+1. Database name
+2. Version number
+3. Text description
+4. Size of database
+
+What is returned is an instance of a `JQueryDatabase` object.
+
 ### Versioning a Database
 
 ## Tables

@@ -1,12 +1,32 @@
-/*global jQuery, console, SQLStatementCallback, SQLStatementErrorCallback */
+/*global jQuery, console */
+
+/**
+ * See (http://jquery.com/).
+ * @name jQuery
+ * @class
+ * See the jQuery Library  (http://jquery.com/) for full details.  This just
+ * documents the function and classes that are added to jQuery by this plug-in.
+ */
+
+/**
+ * See (http://jquery.com/)
+ * @name db
+ * @class
+ * See the jQuery Library  (http://jquery.com/) for full details.  This just
+ * documents the function and classes that are added to jQuery by this plug-in.
+ * @memberOf jQuery
+ */
 (function (jQuery) {
     "use strict";
 
     /**
      * Simplified API for retrieving entities by composing a criterion via chaining
      *
+     * @name JQueryDatabaseCriteria
+     *
      * @param {JQueryDatabase} db
      * @param {String} tableName
+     *
      * @constructor
      */
     function JQueryDatabaseCriteria(db, tableName) {
@@ -17,197 +37,202 @@
         this.firstResult = 0;
         this.restrictions = [];
         this.order = [];
-
-        /**
-         * Called when a criteria successfully executes
-         *
-         * @callback JQueryDatabaseCriteria_successCallback
-         * @param {SQLTransaction} [transaction] the transaction
-         * @param {SQLResultSet} [resultSet] the result set
-         */
-        function JQueryDatabaseCriteria_successCallback(transaction, resultSet) {}
-
-        /**
-         * Called when a criteria fails to execute
-         *
-         * @callback JQueryDatabaseCriteria_errorCallback
-         * @param {SQLTransaction} [transaction] the transaction
-         * @param {SQLError} [error] the error
-         */
-        function JQueryDatabaseCriteria_errorCallback(transaction, error) {}
-
-        /**
-         * Set a limit upon the number of objects to be retrieved.
-         *
-         * @param {Number} count
-         * @returns {JQueryDatabaseCriteria}
-         */
-        this.setMaxResults = function (count) {
-            this.maxResults = count;
-            return this;
-        };
-
-        /**
-         * Set the first result to be retrieved.
-         *
-         * @param {Number} offset
-         * @returns {JQueryDatabaseCriteria}
-         */
-        this.setFirstResult = function (offset) {
-            this.firstResult = offset;
-            return this;
-        };
-
-        /**
-         * Add an ordering to the result set.
-         *
-         * @param {JQueryDatabaseOrder} order
-         * @returns {JQueryDatabaseCriteria}
-         */
-        this.addOrder = function (order) {
-            this.order.push(order);
-            return this;
-        };
-
-        /**
-         * Set the first result to be retrieved.
-         *
-         * @param {JQueryDatabaseRestriction} restriction
-         * @returns {JQueryDatabaseCriteria}
-         */
-        this.add = function (restriction) {
-            this.restrictions.push(restriction);
-
-            return this;
-        };
-
-        /**
-         * Selects records from the database.
-         *
-         * @param {JQueryDatabaseCriteria_successCallback} successCallback Handles completed queries
-         * @param {JQueryDatabaseCriteria_errorCallback} errorCallback Handles failed queries
-         * @returns {JQueryDatabaseCriteria}
-         */
-        this.list = function (successCallback, errorCallback) {
-            var sql = "SELECT _ROWID_, * FROM " + this.tableName;
-            this._executeCriteria(sql, successCallback, errorCallback);
-            return this;
-        };
-
-        /**
-         * Counts records in the database.
-         *
-         * @param {JQueryDatabaseCriteria_successCallback} successCallback Handles completed queries
-         * @param {JQueryDatabaseCriteria_errorCallback} errorCallback Handles failed queries
-         * @returns {JQueryDatabaseCriteria}
-         */
-        this.count = function (successCallback, errorCallback) {
-            var sql = "SELECT COUNT(*) AS count FROM " + this.tableName;
-            this._executeCriteria(sql, successCallback, errorCallback);
-            return this;
-        };
-
-        /**
-         * Removed records from the database.
-         *
-         * @param {JQueryDatabaseCriteria_successCallback} successCallback Handles completed queries
-         * @param {JQueryDatabaseCriteria_errorCallback} errorCallback Handles failed queries
-         * @returns {JQueryDatabaseCriteria}
-         */
-        this.remove = function (successCallback, errorCallback) {
-            var sql = "DELETE FROM " + this.tableName;
-            this._executeCriteria(sql, successCallback, errorCallback);
-            return this;
-        };
-
-        /**
-         * Returns the where clause that is used when picking data to select or manipulate
-         *
-         * @param {Array} args
-         * @returns {string} where clause
-         * @protected
-         */
-        this._getWhereClause = function (args) {
-            var where = [];
-            jQuery.each(this.restrictions, function (index, obj) {
-                where.push(obj.expr);
-                var i;
-                for (i = 0; i < obj.args.length; i = i + 1) {
-                    args.push(obj.args[i]);
-                }
-            });
-            return where.join(" AND ");
-        };
-
-        /**
-         *
-         * @param {String} sql the unfiltered unrestricted statement
-         * @param {JQueryDatabaseCriteria_successCallback} successCallback Handles completed queries
-         * @param {JQueryDatabaseCriteria_errorCallback} errorCallback Handles failed queries
-         * @private
-         */
-        this._executeCriteria = function (sql, successCallback, errorCallback) {
-            var args = [];
-
-            if (this.restrictions.length > 0) {
-                var whereClause = this._getWhereClause(args);
-                sql = sql + " WHERE " + whereClause;
-            }
-            if (this.order.length > 0) {
-                var order = [];
-                jQuery.each(this.order, function (index, obj) {
-
-                });
-                sql = sql + " ORDER BY " + this.order.join(",");
-            }
-            if (typeof this.maxResults === "Number") {
-                sql = sql + " LIMIT " + this.maxResults;
-            }
-            if (this.firstResult > 0) {
-                sql = sql + " OFFSET " + this.firstResult;
-            }
-
-            // console.log(sql, args);
-
-            /**
-             *
-             * @param {SQLTransaction} [transaction]
-             * @param {SQLResultSet} [resultSet]
-             */
-            var myCallback = function (transaction, resultSet) {
-                if (successCallback !== undefined) {
-                    successCallback(transaction, resultSet);
-                }
-            };
-
-            /**
-             *
-             * @param {SQLTransaction} [transaction]
-             * @param {SQLError} [error]
-             */
-            var myErrorCallback = function (transaction, error) {
-                if (errorCallback !== undefined) {
-                    errorCallback(transaction, error);
-                }
-            };
-
-            /**
-             *
-             * @param {SQLTransaction} [tx]
-             */
-            var caller = function (tx) {
-                tx.executeSql(sql, args, myCallback, myErrorCallback);
-            };
-
-            this.db.database.transaction(caller);
-        };
     }
+
+    /**
+     * Set a limit upon the number of objects to be retrieved.
+     *
+     * @function
+     * @memberOf JQueryDatabaseCriteria
+     *
+     * @param {Number} count
+     *
+     * @returns {JQueryDatabaseCriteria}
+     */
+    JQueryDatabaseCriteria.prototype.setMaxResults = function (count) {
+        this.maxResults = count;
+        return this;
+    };
+
+    /**
+     * Set the first result to be retrieved.
+     *
+     * @function
+     * @memberOf JQueryDatabaseCriteria
+     *
+     * @param {Number} offset
+     *
+     * @returns {JQueryDatabaseCriteria}
+     */
+    JQueryDatabaseCriteria.prototype.setFirstResult = function (offset) {
+        this.firstResult = offset;
+        return this;
+    };
+
+    /**
+     * Add an ordering to the result set.
+     *
+     * @function
+     * @memberOf JQueryDatabaseCriteria
+     *
+     * @param {JQueryDatabaseOrder} order
+     *
+     * @returns {JQueryDatabaseCriteria}
+     */
+    JQueryDatabaseCriteria.prototype.addOrder = function (order) {
+        this.order.push(order);
+        return this;
+    };
+
+    /**
+     * Set the first result to be retrieved.
+     *
+     * @function
+     * @memberOf JQueryDatabaseCriteria
+     *
+     * @param {JQueryDatabaseRestriction} restriction
+     *
+     * @returns {JQueryDatabaseCriteria}
+     */
+    JQueryDatabaseCriteria.prototype.add = function (restriction) {
+        this.restrictions.push(restriction);
+
+        return this;
+    };
+
+    /**
+     * Selects records from the database.
+     *
+     * @function
+     * @memberOf JQueryDatabaseCriteria
+     *
+     * @param {SQLStatementCallback} successCallback Handles completed queries
+     * @param {SQLStatementErrorCallback} errorCallback Handles failed queries
+     *
+     * @returns {JQueryDatabaseCriteria}
+     */
+    JQueryDatabaseCriteria.prototype.list = function (successCallback, errorCallback) {
+        var sql = "SELECT _ROWID_, * FROM " + this.tableName;
+        this._executeCriteria(sql, successCallback, errorCallback);
+        return this;
+    };
+
+    /**
+     * Counts records in the database.
+     *
+     * @function
+     * @memberOf JQueryDatabaseCriteria
+     *
+     * @param {SQLStatementCallback} successCallback Handles completed queries
+     * @param {SQLStatementErrorCallback} errorCallback Handles failed queries
+     *
+     * @returns {JQueryDatabaseCriteria}
+     */
+    JQueryDatabaseCriteria.prototype.count = function (successCallback, errorCallback) {
+        var sql = "SELECT COUNT(*) AS count FROM " + this.tableName;
+        this._executeCriteria(sql, successCallback, errorCallback);
+        return this;
+    };
+
+    /**
+     * Removed records from the database.
+     *
+     * @function
+     * @memberOf JQueryDatabaseCriteria
+     *
+     * @param {SQLStatementCallback} successCallback Handles completed queries
+     * @param {SQLStatementErrorCallback} errorCallback Handles failed queries
+     *
+     * @returns {JQueryDatabaseCriteria}
+     */
+    JQueryDatabaseCriteria.prototype.remove = function (successCallback, errorCallback) {
+        var sql = "DELETE FROM " + this.tableName;
+        this._executeCriteria(sql, successCallback, errorCallback);
+        return this;
+    };
+
+    /**
+     * Returns the where clause that is used when picking data to select or manipulate
+     *
+     * @function
+     * @memberOf JQueryDatabaseCriteria
+     *
+     * @param {Array} args
+     * @returns {string} where clause
+     *
+     * @protected
+     */
+    JQueryDatabaseCriteria.prototype._getWhereClause = function (args) {
+        var where = [];
+        jQuery.each(this.restrictions, function (index, obj) {
+            where.push(obj.expr);
+            var i;
+            for (i = 0; i < obj.args.length; i = i + 1) {
+                args.push(obj.args[i]);
+            }
+        });
+        return where.join(" AND ");
+    };
+
+    /**
+     *
+     * @function
+     * @memberOf JQueryDatabaseCriteria
+     *
+     * @param {String} sql the unfiltered unrestricted statement
+     * @param {SQLStatementCallback} successCallback Handles completed queries
+     * @param {SQLStatementErrorCallback} errorCallback Handles failed queries
+     *
+     * @private
+     */
+    JQueryDatabaseCriteria.prototype._executeCriteria = function (sql, successCallback, errorCallback) {
+        var args = [];
+
+        if (this.restrictions.length > 0) {
+            var whereClause = this._getWhereClause(args);
+            sql = sql + " WHERE " + whereClause;
+        }
+        if (this.order.length > 0) {
+            var order = [];
+            jQuery.each(this.order, function (index, obj) {
+
+            });
+            sql = sql + " ORDER BY " + this.order.join(",");
+        }
+        if (typeof this.maxResults === "Number") {
+            sql = sql + " LIMIT " + this.maxResults;
+        }
+        if (this.firstResult > 0) {
+            sql = sql + " OFFSET " + this.firstResult;
+        }
+
+        var myCallback = function (transaction, resultSet) {
+            if (successCallback !== undefined) {
+                successCallback(transaction, resultSet);
+            }
+        };
+
+        var myErrorCallback = function (transaction, error) {
+            if (errorCallback !== undefined) {
+                errorCallback(transaction, error);
+            }
+        };
+
+        var caller = function (tx) {
+            tx.executeSql(sql, args, myCallback, myErrorCallback);
+        };
+
+        this.db.database.transaction(caller);
+    };
 
     /**
      * Result set ordering
      *
+     * @name JQueryDatabaseOrder
+     *
      * @param {String} property
      * @param {Boolean} [isAscending]
+     *
      * @constructor
      */
     function JQueryDatabaseOrder(property, isAscending) {
@@ -217,24 +242,35 @@
         if (isAscending !== undefined) {
             this.isAscending = isAscending;
         }
-
-        this.toString = function () {
-            var order;
-            if (this.isAscending) {
-                order = "ASC";
-            } else {
-                order = "DESC";
-            }
-
-            return this.property + " " + order;
-        };
     }
+
+    /**
+     * String representation of the order by clause
+     *
+     * @function
+     * @memberOf JQueryDatabaseOrder
+     *
+     * @returns {string}
+     */
+    JQueryDatabaseOrder.prototype.toString = function () {
+        var order;
+        if (this.isAscending) {
+            order = "ASC";
+        } else {
+            order = "DESC";
+        }
+
+        return this.property + " " + order;
+    };
 
     /**
      * Filters for database queries
      *
+     * @name JQueryDatabaseRestriction
+     *
      * @param {String} expr
      * @param {Array} [args]
+     *
      * @constructor
      */
     function JQueryDatabaseRestriction(expr, args) {
@@ -249,7 +285,10 @@
     /**
      * Exception thrown for issues within this package.
      *
+     * @name JQueryDatabaseException
+     *
      * @param {String} message
+     *
      * @constructor
      */
     function JQueryDatabaseException(message) {
@@ -258,16 +297,28 @@
         if (message !== undefined) {
             this.message = message;
         }
-
-        this.toString = function () {
-            return this.message;
-        };
     }
+
+    /**
+     * String representation of the exception.
+     *
+     * @function
+     * @memberOf JQueryDatabaseException
+     *
+     * @returns {String}
+     */
+    JQueryDatabaseException.prototype.toString = function () {
+        return this.message;
+    };
+
 
     /**
      * A connection to the database.
      *
+     * @name JQueryDatabase
+     *
      * @param {Database} database
+     *
      * @constructor
      */
     function JQueryDatabase(database) {
@@ -275,246 +326,264 @@
         this.restriction = jQuery.db.restriction;
 
         this.database = database;
+    }
 
-        /**
-         *
-         * @param {Database} database
-         * @param {String} sql
-         * @param {Array} [args]
-         * @param {SQLStatementCallback|Function} [callback]
-         * @param {SQLStatementErrorCallback|Function} [errorCallback]
-         */
-        function execute(database, sql, args, callback, errorCallback) {
-            var myCallback = function (transaction, resultSet) {
-                if (callback !== undefined) {
-                    callback(transaction, resultSet);
+
+    /**
+     * Returns a list of tables
+     *
+     * @function
+     * @memberOf JQueryDatabase
+     *
+     * @param {Function} callback
+     *
+     * @return {JQueryDatabase}
+     */
+    JQueryDatabase.prototype.tables = function (callback) {
+        var mySuccessCallback = function (transaction, resultSet) {
+            var tables = [];
+            var i, len;
+            len = resultSet.rows.length;
+            for (i = 0; i < len; i = i + 1) {
+                var item = resultSet.rows.item(i);
+                if (item.name !== "__WebKitDatabaseInfoTable__" && item.name !== "sqlite_sequence") {
+                    tables.push(item.name);
                 }
-            };
+            }
 
-            var myErrorCallback = function (transaction, error) {
-                if (errorCallback !== undefined) {
-                    errorCallback(transaction, error);
+            if (typeof callback === "function") {
+                callback(tables);
+            }
+        };
+
+        var sql = "SELECT name FROM sqlite_master WHERE type = ?";
+
+        var myErrorCallback = function (transaction, error) {
+            throw new JQueryDatabaseException(error.message + " [" + error.code + "]");
+        };
+
+        this._execute(sql, ["table"], mySuccessCallback, myErrorCallback);
+
+        return this;
+    };
+
+    /**
+     * Creates a new table
+     *
+     * @function
+     * @memberOf JQueryDatabase
+     *
+     * @param {{name: String, columns: Array<{name: String, type: String, constraint: String}>, constraints: Array<String>, dropOrIgnore: String, success: SQLStatementCallback, error: SQLStatementErrorCallback}} params
+     *
+     * @return {JQueryDatabase}
+     */
+    JQueryDatabase.prototype.createTable = function (params) {
+        params = params || {};
+
+        var tableName = params.name;
+        var columnsAndConstraints = [];
+
+        jQuery.each(params.columns, function (index, column) {
+            if (typeof column === "object") {
+                var columnAsString = column.name;
+
+                if (column.hasOwnProperty("type")) {
+                    var typeName = column.type.toUpperCase();
+                    if (typeName === jQuery.db.typeName.text || typeName === jQuery.db.typeName.number || typeName === jQuery.db.typeName.int || typeName === jQuery.db.typeName.integer || typeName === jQuery.db.typeName.real) {
+                        columnAsString = columnAsString + " " + typeName;
+                    } else {
+                        throw new JQueryDatabaseException("Unknown type, \"" + typeName + "\"");
+                    }
                 }
-            };
 
-            /**
-             *
-             * @param {SQLTransaction} [tx]
-             */
-            var caller = function (tx) {
-                args = args || [];
-                tx.executeSql(sql, args, myCallback, myErrorCallback);
-            };
+                if (column.hasOwnProperty("constraint")) {
+                    columnAsString = columnAsString + " " + column.constraint;
+                }
 
-            database.transaction(caller);
+                columnsAndConstraints.push(columnAsString);
+            } else {
+                columnsAndConstraints.push(column);
+            }
+        });
+
+        var dropOrIgnore;
+        if (params.hasOwnProperty("dropOrIgnore")) {
+            if (params.dropOrIgnore.toLowerCase() === "drop") {
+                dropOrIgnore = "drop";
+            } else if (params.dropOrIgnore.toLowerCase() === "ignore") {
+                dropOrIgnore = "ignore";
+            }
+        }
+        var successCallback;
+        if (params.hasOwnProperty("success")) {
+            successCallback = params.success;
+        }
+        var errorCallback;
+        if (params.hasOwnProperty("error")) {
+            errorCallback = params.error;
         }
 
-        /**
-         *
-         * @param {Function} callback
-         * @return {JQueryDatabase}
-         */
-        this.tables = function (callback) {
-            /**
-             *
-             * @param {SQLTransaction} [transaction]
-             * @param {SQLResultSet} [resultSet]
-             */
-            var mySuccessCallback = function (transaction, resultSet) {
-                var tables = [];
-                var i, len;
-                len = resultSet.rows.length;
-                for (i = 0; i < len; i = i + 1) {
-                    var item = resultSet.rows.item(i);
-                    if (item.name !== "__WebKitDatabaseInfoTable__" && item.name !== "sqlite_sequence") {
-                        tables.push(item.name);
-                    }
-                }
+        var sql = "CREATE TABLE ";
 
-                if (typeof callback === "function") {
-                    callback(tables);
-                }
-            };
+        if (dropOrIgnore === "ignore") {
+            sql = sql + "IF NOT EXISTS ";
+        }
 
-            var sql = "SELECT name FROM sqlite_master WHERE type = ?";
-
-            /**
-             *
-             * @param {SQLTransaction} transaction
-             * @param {SQLError} error
-             */
-            var myErrorCallback = function (transaction, error) {
-                // console.log("error :: " + error.message);
-            };
-
-            execute(this.database, sql, ["table"], mySuccessCallback, myErrorCallback);
-
-            return this;
-        };
-
-        /**
-         *
-         * @param {{name: String, [columns]: [{name: String, type: String, [constraint]: String}], [constraints]: Array, [dropOrIgnore]: String, [success]: Function, [error]: Function}} params
-         * @return {JQueryDatabase}
-         */
-        this.createTable = function (params) {
-            params = params || {};
-
-            var tableName = params.name;
-            var columnsAndConstraints = [];
-
-            jQuery.each(params.columns, function (index, column) {
-                if (typeof column === "object") {
-                    var columnAsString = column.name;
-
-                    if (column.hasOwnProperty("type")) {
-                        var typeName = column.type.toUpperCase();
-                        if (typeName === jQuery.db.typeName.text || typeName === jQuery.db.typeName.number || typeName === jQuery.db.typeName.int || typeName === jQuery.db.typeName.integer || typeName === jQuery.db.typeName.real) {
-                            columnAsString = columnAsString + " " + typeName;
-                        } else {
-                            throw new JQueryDatabaseException("Unknown type, \"" + typeName + "\"");
-                        }
-                    }
-
-                    if (column.hasOwnProperty("constraint")) {
-                        columnAsString = columnAsString + " " + column.constraint;
-                    }
-
-                    columnsAndConstraints.push(columnAsString);
-                } else {
-                    columnsAndConstraints.push(column);
-                }
+        if (params.hasOwnProperty("constraints")) {
+            jQuery.each(params.constraints, function (index, constraint) {
+                columnsAndConstraints.push(constraint);
             });
+        }
 
-            var dropOrIgnore;
-            if (params.hasOwnProperty("dropOrIgnore")) {
-                if (params.dropOrIgnore.toLowerCase() === "drop") {
-                    dropOrIgnore = "drop";
-                } else if (params.dropOrIgnore.toLowerCase() === "ignore") {
-                    dropOrIgnore = "ignore";
-                }
+        sql = sql + tableName + " (" + columnsAndConstraints.join(",") + ")";
+
+        if (dropOrIgnore === "drop") {
+            this._execute("DROP TABLE IF EXISTS " + tableName, []);
+        }
+
+        this._execute(sql, [], successCallback, errorCallback);
+
+        return this;
+    };
+
+    /**
+     * Drops an existing table
+     *
+     * @function
+     * @memberOf JQueryDatabase
+     *
+     * @param {{name: String, ignore: Boolean, success: Function, error: Function}} params
+     *
+     * @returns {JQueryDatabase}
+     */
+    JQueryDatabase.prototype.dropTable = function (params) {
+        params = params || {};
+
+        var tableName = params.name;
+
+        var ignore = params.hasOwnProperty("ignore") && params.ignore;
+
+        var successCallback;
+        if (params.hasOwnProperty("success")) {
+            successCallback = params.success;
+        }
+
+        var errorCallback;
+        if (params.hasOwnProperty("error")) {
+            errorCallback = params.error;
+        }
+
+        var sql = "DROP TABLE ";
+
+        if (ignore) {
+            sql = sql + "IF EXISTS ";
+        }
+
+        sql = sql + tableName;
+
+        this._execute(sql, [], successCallback, errorCallback);
+
+        return this;
+    };
+
+    /**
+     * Inserts a new row into a table
+     *
+     * @function
+     * @memberOf JQueryDatabase
+     *
+     * @param {String} tableName
+     * @param {{data: {}, success: SQLStatementCallback, error: SQLStatementErrorCallback}} params
+     *
+     * @returns {JQueryDatabase}
+     */
+    JQueryDatabase.prototype.insert = function (tableName, params) {
+        params = params || {};
+
+        var values = [];
+        var columns = [];
+        var placeholders = [];
+
+        jQuery.each(params.data, function (index, obj) {
+            placeholders.push("?");
+            values.push(obj);
+            columns.push(index);
+        });
+
+        var successCallback;
+        if (params.hasOwnProperty("success")) {
+            successCallback = params.success;
+        }
+
+        var errorCallback;
+        if (params.hasOwnProperty("error")) {
+            errorCallback = params.error;
+        }
+
+        var sql = "INSERT INTO " + tableName + " (" + columns.join(",") + ") VALUES (" + placeholders.join(",") + ")";
+
+        this._execute(sql, values, successCallback, errorCallback);
+
+        return this;
+    };
+
+    /**
+     * This class is a simplified API for retrieving entities by composing a criterion via chaining.
+     *
+     * @function
+     * @memberOf JQueryDatabase
+     *
+     * @param {String} tableName
+     * @returns {JQueryDatabaseCriteria}
+     */
+    JQueryDatabase.prototype.criteria = function (tableName) {
+        return new JQueryDatabaseCriteria(this, tableName);
+    };
+
+    /**
+     * Executes a query on the database.
+     *
+     * @function
+     * @memberOf JQueryDatabase
+     *
+     * @param {String} sql
+     * @param {Array} [args]
+     * @param {SQLStatementCallback} [callback]
+     * @param {SQLStatementErrorCallback} [errorCallback]
+     * @private
+     */
+    JQueryDatabase.prototype._execute = function (sql, args, callback, errorCallback) {
+        var myCallback = function (transaction, resultSet) {
+            if (callback !== undefined) {
+                callback(transaction, resultSet);
             }
-            var successCallback;
-            if (params.hasOwnProperty("success")) {
-                successCallback = params.success;
-            }
-            var errorCallback;
-            if (params.hasOwnProperty("error")) {
-                errorCallback = params.error;
-            }
-
-            var sql = "CREATE TABLE ";
-
-            if (dropOrIgnore === "ignore") {
-                sql = sql + "IF NOT EXISTS ";
-            }
-
-            if (params.hasOwnProperty("constraints")) {
-                jQuery.each(params.constraints, function (index, constraint) {
-                    columnsAndConstraints.push(constraint);
-                });
-            }
-
-            sql = sql + tableName + " (" + columnsAndConstraints.join(",") + ")";
-
-            if (dropOrIgnore === "drop") {
-                execute(this.database, "DROP TABLE IF EXISTS " + tableName, []);
-            }
-
-            execute(this.database, sql, [], successCallback, errorCallback);
-
-            return this;
         };
 
-        /**
-         *
-         * @param {{name: String, [ignore]: Boolean, [success]: Function, [error]: Function}} params
-         * @return {JQueryDatabase}
-         */
-        this.dropTable = function (params) {
-            params = params || {};
-
-            var tableName = params.name;
-
-            var ignore = params.hasOwnProperty("ignore") && params.ignore;
-
-            var successCallback;
-            if (params.hasOwnProperty("success")) {
-                successCallback = params.success;
+        var myErrorCallback = function (transaction, error) {
+            if (errorCallback !== undefined) {
+                errorCallback(transaction, error);
             }
-
-            var errorCallback;
-            if (params.hasOwnProperty("error")) {
-                errorCallback = params.error;
-            }
-
-            var sql = "DROP TABLE ";
-
-            if (ignore) {
-                sql = sql + "IF EXISTS ";
-            }
-
-            sql = sql + tableName;
-
-            execute(this.database, sql, [], successCallback, errorCallback);
-
-            return this;
         };
 
-        /**
-         *
-         * @param {String} tableName
-         * @param {{data: {}, [success]: Function, [error]: Function}} params
-         * @returns {JQueryDatabase}
-         */
-        this.insert = function (tableName, params) {
-            params = params || {};
-
-            var values = [];
-            var columns = [];
-            var placeholders = [];
-
-            jQuery.each(params.data, function (index, obj) {
-                placeholders.push("?");
-                values.push(obj);
-                columns.push(index);
-            });
-
-            var successCallback;
-            if (params.hasOwnProperty("success")) {
-                successCallback = params.success;
-            }
-
-            var errorCallback;
-            if (params.hasOwnProperty("error")) {
-                errorCallback = params.error;
-            }
-
-            var sql = "INSERT INTO " + tableName + " (" + columns.join(",") + ") VALUES (" + placeholders.join(",") + ")";
-
-            execute(this.database, sql, values, successCallback, errorCallback);
-
-            return this;
+        var caller = function (tx) {
+            args = args || [];
+            tx.executeSql(sql, args, myCallback, myErrorCallback);
         };
 
-        /**
-         * This class is a simplified API for retrieving entities by composing a criterion via chaining.
-         *
-         * @param {String} tableName
-         * @returns {JQueryDatabaseCriteria}
-         */
-        this.criteria = function (tableName) {
-            return new JQueryDatabaseCriteria(this, tableName);
-        };
-    }
+        this.database.transaction(caller);
+    };
 
     /**
      *
+     * @name db
+     * @function
+     * @memberOf jQuery
+
      * @param {String} shortName
      * @param {String} version
      * @param {String} displayName
      * @param {Number} maxSize
-     * @param {DatabaseCallback|Function} [creationCallback]
+     * @param {DatabaseCallback} [creationCallback]
      *
      * @returns {undefined|JQueryDatabase}
      */
@@ -537,6 +606,11 @@
         return db;
     };
 
+    /**
+     * @name db.typeName
+     * @class
+     * @memberOf jQuery
+     */
     jQuery.db.typeName = {
         text: "TEXT",
         numeric: "NUM",
@@ -546,6 +620,11 @@
         none: ""
     };
 
+    /**
+     * @name db.columnConstraint
+     * @class
+     * @memberOf jQuery
+     */
     jQuery.db.columnConstraint = {
         primaryKey: function (params) {
         },
@@ -566,6 +645,10 @@
     /**
      * Apply ordering by a property.
      *
+     * @name db.order
+     * @function
+     * @memberOf jQuery
+     *
      * @param {String} property
      * @param {Boolean} isAscending
      * @return JQueryDatabaseOrder
@@ -578,7 +661,11 @@
         /**
          * Ascending order
          *
-         * @param property
+         * @name db.order.asc
+         * @function
+         * @memberOf jQuery
+         *
+         * @param {String} property
          * @returns {JQueryDatabaseOrder}
          */
         asc: function (property) {
@@ -588,7 +675,11 @@
         /**
          * Descending order
          *
-         * @param property
+         * @name db.order.asc
+         * @function
+         * @memberOf jQuery
+         *
+         * @param {String} property
          * @returns {JQueryDatabaseOrder}
          */
         desc: function (property) {
@@ -598,6 +689,10 @@
 
     /**
      * Apply a constraint expressed in SQL.
+     *
+     * @name db.restriction
+     * @function
+     * @memberOf jQuery
      *
      * @param {String} expr
      * @param {Array} args
@@ -610,6 +705,10 @@
     jQuery.extend(jQuery.db.restriction, {
         /**
          * Apply an "equals" constraint to each property in the key set of an object
+         *
+         * @name db.restriction.allEq
+         * @function
+         * @memberOf jQuery
          *
          * @param object
          * @returns {JQueryDatabaseRestriction}
@@ -627,6 +726,10 @@
         /**
          * Return the conjuction of two expressions
          *
+         * @name db.restriction.and
+         * @function
+         * @memberOf jQuery
+         *
          * @param {JQueryDatabaseCriteria} criteriaA
          * @param {JQueryDatabaseCriteria} criteriaB
          * @returns {JQueryDatabaseRestriction}
@@ -640,6 +743,10 @@
 
         /**
          * Apply a "between" constraint to the named property
+         *
+         * @name db.restriction.between
+         * @function
+         * @memberOf jQuery
          *
          * @param {String} property
          * @param {*} lowValue
@@ -657,6 +764,10 @@
         /**
          * Apply an "equal" constraint to the named property
          *
+         * @name db.restriction.eq
+         * @function
+         * @memberOf jQuery
+         *
          * @param {String} property
          * @param {*} value
          * @returns {JQueryDatabaseRestriction}
@@ -667,6 +778,10 @@
 
         /**
          * Apply an "equal" constraint to two properties
+         *
+         * @name db.restriction.eqProperty
+         * @function
+         * @memberOf jQuery
          *
          * @param {String} property
          * @param {String} otherProperty
@@ -679,6 +794,10 @@
         /**
          * Apply a "greater than or equal" constraint to the named property
          *
+         * @name db.restriction.ge
+         * @function
+         * @memberOf jQuery
+         *
          * @param {String} property
          * @param {*} value
          * @returns {JQueryDatabaseRestriction}
@@ -689,6 +808,10 @@
 
         /**
          * Apply a "greater than or equal" constraint to two properties
+         *
+         * @name db.restriction.geProperty
+         * @function
+         * @memberOf jQuery
          *
          * @param {String} property
          * @param {String} otherProperty
@@ -701,6 +824,10 @@
         /**
          * Apply a "greater than" constraint to the named property
          *
+         * @name db.restriction.gt
+         * @function
+         * @memberOf jQuery
+         *
          * @param {String} property
          * @param {*} value
          * @returns {JQueryDatabaseRestriction}
@@ -712,6 +839,10 @@
         /**
          * Apply a "greater than" constraint to two properties
          *
+         * @name db.restriction.gtProperty
+         * @function
+         * @memberOf jQuery
+         *
          * @param property
          * @param {String} otherProperty
          * @returns {JQueryDatabaseRestriction}
@@ -722,6 +853,10 @@
 
         /**
          * Apply an "equal" constraint to the identifier property
+         *
+         * @name db.restriction.idEq
+         * @function
+         * @memberOf jQuery
          *
          * @param value
          * @returns {JQueryDatabaseRestriction}
@@ -736,6 +871,10 @@
 
         /**
          * Apply an "in" constraint to the named property
+         *
+         * @name db.restriction.in
+         * @function
+         * @memberOf jQuery
          *
          * @param property
          * @param values
@@ -753,6 +892,10 @@
         /**
          * Constrain a collection valued property to be empty
          *
+         * @name db.restriction.isEmpty
+         * @function
+         * @memberOf jQuery
+         *
          * @param property
          * @returns {JQueryDatabaseRestriction}
          */
@@ -762,6 +905,10 @@
 
         /**
          * Constrain a collection valued property to be non-empty
+         *
+         * @name db.restriction.isNotEmpty
+         * @function
+         * @memberOf jQuery
          *
          * @param property
          * @returns {JQueryDatabaseRestriction}
@@ -773,6 +920,10 @@
         /**
          *  Apply an "is not null" constraint to the named property
          *
+         * @name db.restriction.isNotNull
+         * @function
+         * @memberOf jQuery
+         *
          * @param property
          * @returns {JQueryDatabaseRestriction}
          */
@@ -783,6 +934,10 @@
         /**
          * Apply an "is null" constraint to the named property
          *
+         * @name db.restriction.isNull
+         * @function
+         * @memberOf jQuery
+         *
          * @param property
          * @returns {JQueryDatabaseRestriction}
          */
@@ -792,6 +947,10 @@
 
         /**
          * Apply a "less than or equal" constraint to the named property
+         *
+         * @name db.restriction.le
+         * @function
+         * @memberOf jQuery
          *
          * @param {String} property
          * @param {*} value
@@ -804,6 +963,10 @@
         /**
          * Apply a "less than or equal" constraint to two properties
          *
+         * @name db.restriction.leProperty
+         * @function
+         * @memberOf jQuery
+         *
          * @param {String} property
          * @param {String} otherProperty
          * @returns {JQueryDatabaseRestriction}
@@ -815,6 +978,10 @@
         /**
          * Apply a "like" constraint to the named property
          *
+         * @name db.restriction.like
+         * @function
+         * @memberOf jQuery
+         *
          * @param {String} property
          * @param {*} value
          */
@@ -824,6 +991,10 @@
 
         /**
          * Apply a "greater than" constraint to the named property
+         *
+         * @name db.restriction.lt
+         * @function
+         * @memberOf jQuery
          *
          * @param {String} property
          * @param {*} value
@@ -836,6 +1007,10 @@
         /**
          * Apply a "greater than" constraint to two properties
          *
+         * @name db.restriction.ltProperty
+         * @function
+         * @memberOf jQuery
+         *
          * @param property
          * @param {String} otherProperty
          * @returns {JQueryDatabaseRestriction}
@@ -846,6 +1021,10 @@
 
         /**
          * Apply a "not equal" constraint to the named property
+         *
+         * @name db.restriction.ne
+         * @function
+         * @memberOf jQuery
          *
          * @param {String} property
          * @param {*} value
@@ -858,6 +1037,10 @@
         /**
          * Apply a "not equal" constraint to two properties
          *
+         * @name db.restriction.neProperty
+         * @function
+         * @memberOf jQuery
+         *
          * @param property
          * @param {String} otherProperty
          * @returns {JQueryDatabaseRestriction}
@@ -868,6 +1051,10 @@
 
         /**
          * Return the negation of an expression
+         *
+         * @name db.restriction.not
+         * @function
+         * @memberOf jQuery
          *
          * @param {JQueryDatabaseCriteria} criteria
          * @returns {JQueryDatabaseRestriction}
@@ -881,6 +1068,10 @@
         /**
          * Return the disjuction of two expressions
          *
+         * @name db.restriction.or
+         * @function
+         * @memberOf jQuery
+         *
          * @param {JQueryDatabaseCriteria} criteriaA
          * @param {JQueryDatabaseCriteria} criteriaB
          * @returns {JQueryDatabaseRestriction}
@@ -891,6 +1082,5 @@
             var b = criteriaB._getWhereClause(args);
             return new JQueryDatabaseRestriction("(" + a + ") OR (" + b + ")", args);
         }
-
     });
 }(jQuery));
