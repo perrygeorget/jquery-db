@@ -322,7 +322,6 @@
      * @constructor
      */
     function JQueryDatabase(database) {
-        this.typeName = jQuery.db.typeName;
         this.restriction = jQuery.db.restriction;
 
         this.database = database;
@@ -388,12 +387,7 @@
                 var columnAsString = column.name;
 
                 if (column.hasOwnProperty("type")) {
-                    var typeName = column.type.toUpperCase();
-                    if (typeName === jQuery.db.typeName.text || typeName === jQuery.db.typeName.number || typeName === jQuery.db.typeName.int || typeName === jQuery.db.typeName.integer || typeName === jQuery.db.typeName.real) {
-                        columnAsString = columnAsString + " " + typeName;
-                    } else {
-                        throw new JQueryDatabaseException("Unknown type, \"" + typeName + "\"");
-                    }
+                    columnAsString = columnAsString + " " + column.type;
                 }
 
                 if (column.hasOwnProperty("constraint")) {
@@ -604,42 +598,6 @@
         }
 
         return db;
-    };
-
-    /**
-     * @name db.typeName
-     * @class
-     * @memberOf jQuery
-     */
-    jQuery.db.typeName = {
-        text: "TEXT",
-        numeric: "NUM",
-        int: "INT",
-        integer: "INTEGER",
-        real: "REAL",
-        none: ""
-    };
-
-    /**
-     * @name db.columnConstraint
-     * @class
-     * @memberOf jQuery
-     */
-    jQuery.db.columnConstraint = {
-        primaryKey: function (params) {
-        },
-        notNull: function (params) {
-        },
-        unique: function (params) {
-        },
-        check: function (params) {
-        },
-        defaultValue: function (params) {
-        },
-        collate: function (params) {
-        },
-        foreignKey: function (params) {
-        }
     };
 
     /**

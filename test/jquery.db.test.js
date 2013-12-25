@@ -583,51 +583,6 @@ test("Can insert data into table that exists", 4, function () {
 });
 
 
-module("\"$.db\" has type names");
-
-
-test("Has integer type name", function() {
-    var db = $.db(shortName, version, displayName, maxSize);
-
-    equal($.db.typeName.integer, "INTEGER");
-    equal(db.typeName.integer, "INTEGER");
-});
-
-test("Has numeric type name", function() {
-    var db = $.db(shortName, version, displayName, maxSize);
-
-    equal($.db.typeName.numeric, "NUM");
-    equal(db.typeName.numeric, "NUM");
-});
-
-test("Has int type name", function() {
-    var db = $.db(shortName, version, displayName, maxSize);
-
-    equal($.db.typeName.int, "INT");
-    equal(db.typeName.int, "INT");
-});
-
-test("Has integer type name", function() {
-    var db = $.db(shortName, version, displayName, maxSize);
-
-    equal($.db.typeName.integer, "INTEGER");
-    equal(db.typeName.integer, "INTEGER");
-});
-
-test("Has real type name", function() {
-    var db = $.db(shortName, version, displayName, maxSize);
-
-    equal($.db.typeName.real, "REAL");
-    equal(db.typeName.real, "REAL");
-});
-
-test("Has none type name", function() {
-    var db = $.db(shortName, version, displayName, maxSize);
-
-    equal($.db.typeName.none, "");
-    equal(db.typeName.none, "");
-});
-
 module("Restrictions generate correct SQL snippets");
 
 test("Restriction allEq -- complex", function() {
@@ -960,27 +915,27 @@ module("Can select data", {
                     columns: [
                         {
                             name: "id",
-                            type: $.db.typeName.integer,
+                            type: "INTEGER",
                             constraint: "PRIMARY KEY AUTOINCREMENT"
                         },
                         {
                             name: "name",
-                            type: $.db.typeName.text,
+                            type: "TEXT",
                             constraint: "NOT NULL"
                         },
                         {
                             name: "rank",
-                            type: $.db.typeName.text,
+                            type: "TEXT",
                             constraint: "NOT NULL"
                         },
                         {
                             name: "male",
-                            type: $.db.typeName.int,
+                            type: "INT",
                             constraint: "NOT NULL"
                         },
                         {
                             name: "age",
-                            type: $.db.typeName.int,
+                            type: "INT",
                             constraint: "NOT NULL"
                         }
                     ],
@@ -992,10 +947,10 @@ module("Can select data", {
                                 male: 1,
                                 age: 18
                             },
-                            success: function (transaction, results) {
+                            success: function () {
                                 start();
                             },
-                            failure: function (transaction, error) {
+                            failure: function () {
                                 start();
                             }
                         }).insert(tableName, {
@@ -1005,10 +960,10 @@ module("Can select data", {
                                 male: 0,
                                 age: 18
                             },
-                            success: function (transaction, results) {
+                            success: function () {
                                 start();
                             },
-                            failure: function (transaction, error) {
+                            failure: function () {
                                 start();
                             }
                         }).insert(tableName, {
@@ -1018,10 +973,10 @@ module("Can select data", {
                                 male: 1,
                                 age: 42
                             },
-                            success: function (transaction, results) {
+                            success: function () {
                                 start();
                             },
-                            failure: function (transaction, error) {
+                            failure: function () {
                                 start();
                             }
                         }).insert(tableName, {
@@ -1031,10 +986,10 @@ module("Can select data", {
                                 male: 1,
                                 age: 55
                             },
-                            success: function (transaction, results) {
+                            success: function () {
                                 start();
                             },
-                            failure: function (transaction, error) {
+                            failure: function () {
                                 start();
                             }
                         });
