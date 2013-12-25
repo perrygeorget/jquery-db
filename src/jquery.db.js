@@ -255,7 +255,7 @@
     function JQueryDatabaseException(message) {
         JQueryDatabaseRestriction.prototype.message = "JQuery Database Exception";
 
-        if (message != undefined) {
+        if (message !== undefined) {
             this.message = message;
         }
 
