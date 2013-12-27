@@ -358,7 +358,7 @@
      *
      * @returns {string}
      */
-    JQueryDatabase.prototype.version = function() {
+    JQueryDatabase.prototype.getVersion = function() {
         return this.database.version;
     };
 
@@ -378,7 +378,7 @@
             throw new JQueryDatabaseException("Version changes not possible in this browser version.");
         }
 
-        var oldVersion = this.version();
+        var oldVersion = this.getVersion();
         var migrationKey = oldVersion + ":" + newVersion;
 
         if (!this.migrations.hasOwnProperty(migrationKey)) {

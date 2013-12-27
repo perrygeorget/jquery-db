@@ -186,7 +186,7 @@ test("Can get version when set", 1, function() {
     var seed = Math.floor(Math.random() * 1000);
     var shortName = "test_db_" + new Date().getTime() + "_" + seed;
     $.db(shortName, "", "Version Test", 1024, function(db) {
-        var version = db.version();
+        var version = db.getVersion();
         equal(version, "", "Expected the version not to be set");
 
         clearTimeout(timeout);
@@ -227,7 +227,7 @@ test("Can not migrate when version not found.", 2, function() {
     $.db(shortName, "", "Version Test", 1024, function(db) {
         clearTimeout(timeout);
 
-        equal(db.version(), "", "Expected the version not to be set");
+        equal(db.getVersion(), "", "Expected the version not to be set");
 
         raises(function() {
             db.changeVersion("1.0");
