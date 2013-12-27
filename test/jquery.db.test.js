@@ -1,4 +1,4 @@
-var shortName = "testdb_" + new Date().getTime();
+var shortName = "test_db_" + new Date().getTime();
 var version = "";
 var displayName = "Test Databases";
 var maxSize = 1024 * 1024;
@@ -157,6 +157,141 @@ test("Can not create table twice", 1, function () {
         }
     });
 }, true);
+
+test("Creation callback has JQueryDatabase as its arguments.", 1, function() {
+    var timeout = setTimeout(function() {
+        start();
+    }, 3);
+
+    var seed = Math.floor(Math.random() * 1000);
+    var shortName = "test_db_" + new Date().getTime() + "_" + seed;
+    var myDB = $.db(shortName, "", "Version Test", 1024, function(db) {
+        ok(Object.getPrototypeOf(db) === Object.getPrototypeOf(myDB), "Expected argument to be an instance of JQueryDatabase");
+
+        clearTimeout(timeout);
+        start();
+    });
+
+    stop();
+});
+
+
+module("Database version management" , {});
+
+test("Can get version when set", 1, function() {
+    var timeout = setTimeout(function() {
+        start();
+    }, 3);
+
+    var seed = Math.floor(Math.random() * 1000);
+    var shortName = "test_db_" + new Date().getTime() + "_" + seed;
+    $.db(shortName, "", "Version Test", 1024, function(db) {
+        var version = db.version();
+        equal(version, "", "Expected the version not to be set");
+
+        clearTimeout(timeout);
+        start();
+    });
+
+    stop();
+});
+
+test("Can add a migration", 1, function() {
+    var timeout = setTimeout(function() {
+        start();
+    }, 3);
+
+    var seed = Math.floor(Math.random() * 1000);
+    var shortName = "test_db_" + new Date().getTime() + "_" + seed;
+    var db = $.db(shortName, "", "Version Test", 1024, function(db) {
+        clearTimeout(timeout);
+        start();
+    });
+
+    stop();
+
+    db.addVersionMigration("", "1.0", function(transaction) {
+        // does nothing
+    });
+
+    ok(db.migrations.hasOwnProperty(":1.0"), "Should have the 0 -> 1.0 migration.");
+});
+
+test("Can not migrate when version not found.", 2, function() {
+    var timeout = setTimeout(function() {
+        start();
+    }, 3);
+
+    var seed = Math.floor(Math.random() * 1000);
+    var shortName = "test_db_" + new Date().getTime() + "_" + seed;
+    $.db(shortName, "", "Version Test", 1024, function(db) {
+        clearTimeout(timeout);
+
+        equal(db.version(), "", "Expected the version not to be set");
+
+        raises(function() {
+            db.changeVersion("1.0");
+        }, "Migration not found [ -> 1.0]");
+
+        start();
+    });
+
+    stop();
+});
+
+//test("Can migrate to a found version.", 3, function() {
+//    var timeout = setTimeout(function() {
+//        start();
+//    }, 3);
+//
+//    var migrationExecuted = false;
+//
+//    var seed = Math.floor(Math.random() * 1000);
+//    var shortName = "test_db_" + "_" + seed;
+//    var db = $.db(shortName, "", "Version Test", 1024 * 1024, function(db) {
+//        clearTimeout(timeout);
+//
+//        db.createTable({
+//            name: "MyTestTable",
+//            columns: [
+//                "id INT",
+//                "value TEXT"
+//            ],
+//            success: function () {
+//                ok(true);
+//                start();
+//            },
+//            error: function () {
+//                ok(false);
+//                start();
+//            }
+//        });
+//    });
+//
+//    stop();
+//
+//    db.addVersionMigration("","1.0", function(transaction) {
+//        migrationExecuted = true;
+//    });
+//
+//    timeout = setTimeout(function() {
+//        start();
+//    }, 3);
+//
+//    db.changeVersion("1.0", function() {
+//        clearTimeout(timeout);
+//        ok(true);
+//        start();
+//    }, function(error) {
+//        clearTimeout(timeout);
+//        ok(false, error.message);
+//        start();
+//    });
+//
+//    stop();
+//
+//    ok(migrationExecuted, "Migration should have been executed");
+//});
 
 
 module("Table deletion", {

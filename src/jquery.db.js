@@ -106,8 +106,8 @@
      * @function
      * @memberOf JQueryDatabaseCriteria
      *
-     * @param {SQLStatementCallback} successCallback Handles completed queries
-     * @param {SQLStatementErrorCallback} errorCallback Handles failed queries
+     * @param {SQLStatementCallback|Function} successCallback Handles completed queries
+     * @param {SQLStatementErrorCallback|Function} errorCallback Handles failed queries
      *
      * @returns {JQueryDatabaseCriteria}
      */
@@ -123,8 +123,8 @@
      * @function
      * @memberOf JQueryDatabaseCriteria
      *
-     * @param {SQLStatementCallback} successCallback Handles completed queries
-     * @param {SQLStatementErrorCallback} errorCallback Handles failed queries
+     * @param {SQLStatementCallback|Function} successCallback Handles completed queries
+     * @param {SQLStatementErrorCallback|Function} errorCallback Handles failed queries
      *
      * @returns {JQueryDatabaseCriteria}
      */
@@ -140,8 +140,8 @@
      * @function
      * @memberOf JQueryDatabaseCriteria
      *
-     * @param {SQLStatementCallback} successCallback Handles completed queries
-     * @param {SQLStatementErrorCallback} errorCallback Handles failed queries
+     * @param {SQLStatementCallback|Function} successCallback Handles completed queries
+     * @param {SQLStatementErrorCallback|Function} errorCallback Handles failed queries
      *
      * @returns {JQueryDatabaseCriteria}
      */
@@ -180,8 +180,8 @@
      * @memberOf JQueryDatabaseCriteria
      *
      * @param {String} sql the unfiltered unrestricted statement
-     * @param {SQLStatementCallback} successCallback Handles completed queries
-     * @param {SQLStatementErrorCallback} errorCallback Handles failed queries
+     * @param {SQLStatementCallback|Function} successCallback Handles completed queries
+     * @param {SQLStatementErrorCallback|Function} errorCallback Handles failed queries
      *
      * @private
      */
@@ -322,11 +322,74 @@
      * @constructor
      */
     function JQueryDatabase(database) {
-        this.restriction = jQuery.db.restriction;
+        JQueryDatabase.prototype.migrations = {};
 
+        this.restriction = jQuery.db.restriction;
         this.database = database;
     }
 
+    /**
+     * Adds migrations that are available to bump a database from one version to another.
+     *
+     * @function
+     * @memberOf JQueryDatabase
+     *
+     * @param oldVersion
+     * @param newVersion
+     * @param {SQLTransactionCallback|Function} callback
+     *
+     * @return {JQueryDatabase}
+     */
+    JQueryDatabase.prototype.addVersionMigration = function (oldVersion, newVersion, callback) {
+        if (!this.database.changeVersion) {
+            throw new JQueryDatabaseException("Version changes not possible in this browser version.");
+        }
+
+        this.migrations[oldVersion + ":" + newVersion] = callback;
+
+        return this;
+    };
+
+    /**
+     * The current version of the database.
+     *
+     * @function
+     * @memberOf JQueryDatabase
+     *
+     * @returns {string}
+     */
+    JQueryDatabase.prototype.version = function() {
+        return this.database.version;
+    };
+
+    /**
+     *
+     * @function
+     * @memberOf JQueryDatabase
+     *
+     * @param newVersion
+     * @param {SQLVoidCallback|Function} [successCallback]
+     * @param {SQLTransactionErrorCallback|Function} [errorCallback]
+     *
+     * @return {JQueryDatabase}
+     */
+    JQueryDatabase.prototype.changeVersion = function(newVersion, successCallback, errorCallback) {
+        if (!this.database.changeVersion) {
+            throw new JQueryDatabaseException("Version changes not possible in this browser version.");
+        }
+
+        var oldVersion = this.version();
+        var migrationKey = oldVersion + ":" + newVersion;
+
+        if (!this.migrations.hasOwnProperty(migrationKey)) {
+            throw new JQueryDatabaseException("Migration not found [" + oldVersion + " -> " + newVersion + "]");
+        }
+
+        var callback = this.migrations[migrationKey];
+        this.database.changeVersion(oldVersion, newVersion, callback, errorCallback, successCallback);
+
+        return this;
+    };
 
     /**
      * Returns a list of tables
@@ -487,7 +550,7 @@
      * @memberOf JQueryDatabase
      *
      * @param {String} tableName
-     * @param {{data: {}, success: SQLStatementCallback, error: SQLStatementErrorCallback}} params
+     * @param {{data: {}, success: SQLStatementCallback|Function, error: SQLStatementErrorCallback|Function}} params
      *
      * @returns {JQueryDatabase}
      */
@@ -542,8 +605,8 @@
      *
      * @param {String} sql
      * @param {Array} [args]
-     * @param {SQLStatementCallback} [callback]
-     * @param {SQLStatementErrorCallback} [errorCallback]
+     * @param {SQLStatementCallback|Function} [callback]
+     * @param {SQLStatementErrorCallback|Function} [errorCallback]
      * @private
      */
     JQueryDatabase.prototype._execute = function (sql, args, callback, errorCallback) {
@@ -568,16 +631,28 @@
     };
 
     /**
+     * The creation callback will be called if the database is being created. Without this feature, however, the
+     * databases are still being created on the fly and correctly versioned.
+     *
+     * @callback
+     * @name JQueryDatabase_CreationCallback
+     * @function
+     *
+     * @param JQueryDatabase
+     */
+
+    /**
+     * Creates an instance of the JQueryDatabase object.  Undefined is returned if HTML5 Web Database is not supported.
      *
      * @name db
      * @function
      * @memberOf jQuery
-
+     *
      * @param {String} shortName
      * @param {String} version
      * @param {String} displayName
      * @param {Number} maxSize
-     * @param {DatabaseCallback} [creationCallback]
+     * @param {JQueryDatabase_CreationCallback} [creationCallback]
      *
      * @returns {undefined|JQueryDatabase}
      */
@@ -586,13 +661,16 @@
         if (!window.openDatabase) {
             db = undefined;
         } else {
-            var openDB = window.openDatabase(shortName, version, displayName, maxSize, creationCallback);
+            var openDB = window.openDatabase(shortName, version, displayName, maxSize, function(openDB) {
+                if (typeof creationCallback !== "undefined") {
+                    var db = new JQueryDatabase(openDB);
+                    creationCallback(db);
+                }
+            });
+
             if (openDB) {
                 db = new JQueryDatabase(openDB);
             } else {
-                if (window.console) {
-                    // console.log("HTML5 DB Unavailable");
-                }
                 db = undefined;
             }
         }
@@ -627,7 +705,7 @@
          * @returns {JQueryDatabaseOrder}
          */
         asc: function (property) {
-            return jQuery.db.order(property, "ASC");
+            return jQuery.db.order(property, true);
         },
 
         /**
@@ -641,7 +719,7 @@
          * @returns {JQueryDatabaseOrder}
          */
         desc: function (property) {
-            return jQuery.db.order(property, "DESC");
+            return jQuery.db.order(property, false);
         }
     });
 

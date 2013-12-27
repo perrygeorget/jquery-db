@@ -24,6 +24,7 @@
         "stop"  : false,
         "ok": false,
         "equal": false,
+        "raises": false,
         "deepEqual": false,
         "test": false,
         "asyncTest": false
