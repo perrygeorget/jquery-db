@@ -358,7 +358,7 @@
      *
      * @returns {string}
      */
-    JQueryDatabase.prototype.getVersion = function() {
+    JQueryDatabase.prototype.getVersion = function () {
         return this.database.version;
     };
 
@@ -373,7 +373,7 @@
      *
      * @return {JQueryDatabase}
      */
-    JQueryDatabase.prototype.changeVersion = function(newVersion, successCallback, errorCallback) {
+    JQueryDatabase.prototype.changeVersion = function (newVersion, successCallback, errorCallback) {
         if (!this.database.changeVersion) {
             throw new JQueryDatabaseException("Version changes not possible in this browser version.");
         }
@@ -661,7 +661,7 @@
         if (!window.openDatabase) {
             db = undefined;
         } else {
-            var openDB = window.openDatabase(shortName, version, displayName, maxSize, function(openDB) {
+            var openDB = window.openDatabase(shortName, version, displayName, maxSize, function (openDB) {
                 if (typeof creationCallback !== "undefined") {
                     var db = new JQueryDatabase(openDB);
                     creationCallback(db);
@@ -752,7 +752,7 @@
         allEq: function (object) {
             var where = [];
             var values = [];
-            jQuery.each(object, function(key, value) {
+            jQuery.each(object, function (key, value) {
                 where.push(key + " = ?");
                 values.push(value);
             });

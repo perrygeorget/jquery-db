@@ -158,14 +158,14 @@ test("Can not create table twice", 1, function () {
     });
 }, true);
 
-test("Creation callback has JQueryDatabase as its arguments.", 1, function() {
-    var timeout = setTimeout(function() {
+test("Creation callback has JQueryDatabase as its arguments.", 1, function () {
+    var timeout = setTimeout(function () {
         start();
     }, 3);
 
     var seed = Math.floor(Math.random() * 1000);
     var shortName = "test_db_" + new Date().getTime() + "_" + seed;
-    var myDB = $.db(shortName, "", "Version Test", 1024, function(db) {
+    var myDB = $.db(shortName, "", "Version Test", 1024, function (db) {
         ok(Object.getPrototypeOf(db) === Object.getPrototypeOf(myDB), "Expected argument to be an instance of JQueryDatabase");
 
         clearTimeout(timeout);
@@ -176,16 +176,16 @@ test("Creation callback has JQueryDatabase as its arguments.", 1, function() {
 });
 
 
-module("Database version management" , {});
+module("Database version management", {});
 
-test("Can get version when set", 1, function() {
-    var timeout = setTimeout(function() {
+test("Can get version when set", 1, function () {
+    var timeout = setTimeout(function () {
         start();
     }, 3);
 
     var seed = Math.floor(Math.random() * 1000);
     var shortName = "test_db_" + new Date().getTime() + "_" + seed;
-    $.db(shortName, "", "Version Test", 1024, function(db) {
+    $.db(shortName, "", "Version Test", 1024, function (db) {
         var version = db.getVersion();
         equal(version, "", "Expected the version not to be set");
 
@@ -196,40 +196,40 @@ test("Can get version when set", 1, function() {
     stop();
 });
 
-test("Can add a migration", 1, function() {
-    var timeout = setTimeout(function() {
+test("Can add a migration", 1, function () {
+    var timeout = setTimeout(function () {
         start();
     }, 3);
 
     var seed = Math.floor(Math.random() * 1000);
     var shortName = "test_db_" + new Date().getTime() + "_" + seed;
-    var db = $.db(shortName, "", "Version Test", 1024, function(db) {
+    var db = $.db(shortName, "", "Version Test", 1024, function (db) {
         clearTimeout(timeout);
         start();
     });
 
     stop();
 
-    db.addVersionMigration("", "1.0", function(transaction) {
+    db.addVersionMigration("", "1.0", function (transaction) {
         // does nothing
     });
 
     ok(db.migrations.hasOwnProperty(":1.0"), "Should have the 0 -> 1.0 migration.");
 });
 
-test("Can not migrate when version not found.", 2, function() {
-    var timeout = setTimeout(function() {
+test("Can not migrate when version not found.", 2, function () {
+    var timeout = setTimeout(function () {
         start();
     }, 3);
 
     var seed = Math.floor(Math.random() * 1000);
     var shortName = "test_db_" + new Date().getTime() + "_" + seed;
-    $.db(shortName, "", "Version Test", 1024, function(db) {
+    $.db(shortName, "", "Version Test", 1024, function (db) {
         clearTimeout(timeout);
 
         equal(db.getVersion(), "", "Expected the version not to be set");
 
-        raises(function() {
+        raises(function () {
             db.changeVersion("1.0");
         }, "Migration not found [ -> 1.0]");
 
@@ -720,7 +720,7 @@ test("Can insert data into table that exists", 4, function () {
 
 module("Restrictions generate correct SQL snippets");
 
-test("Restriction allEq -- complex", function() {
+test("Restriction allEq -- complex", function () {
     var restriction = $.db.restriction.allEq({
         name: "Peppercock",
         rank: "Private",
@@ -739,7 +739,7 @@ test("Restriction allEq -- complex", function() {
     deepEqual(restrictionFromInstance.args, ["Peppercock", "Private", "8675309"], "Arguments should match");
 });
 
-test("Restriction and -- complex", function() {
+test("Restriction and -- complex", function () {
     var db = $.db(shortName, version, displayName, maxSize);
     var tableName = "MyTestTable";
 
@@ -764,7 +764,7 @@ test("Restriction and -- complex", function() {
     deepEqual(restrictionFromInstance.args, ["a", "b", "c", "d"], "Arguments should match");
 });
 
-test("Restriction between", function() {
+test("Restriction between", function () {
     var restriction = $.db.restriction.between("high_noon", 11, 13);
     equal(restriction.expr, "high_noon BETWEEN ? AND ?", "Expression should match");
     deepEqual(restriction.args, [11, 13], "Arguments should match");
@@ -775,7 +775,7 @@ test("Restriction between", function() {
     deepEqual(restrictionFromInstance.args, [11, 13], "Arguments should match");
 });
 
-test("Restriction eq", function() {
+test("Restriction eq", function () {
     var restriction = $.db.restriction.eq("the_number", 42);
     equal(restriction.expr, "the_number = ?", "Expression should match");
     deepEqual(restriction.args, [42], "Arguments should match");
@@ -786,7 +786,7 @@ test("Restriction eq", function() {
     deepEqual(restrictionFromInstance.args, [42], "Arguments should match");
 });
 
-test("Restriction eqProperty", function() {
+test("Restriction eqProperty", function () {
     var restriction = $.db.restriction.eqProperty("a", "b");
     equal(restriction.expr, "a = b", "Expression should match");
     deepEqual(restriction.args, [], "Arguments should match");
@@ -797,7 +797,7 @@ test("Restriction eqProperty", function() {
     deepEqual(restrictionFromInstance.args, [], "Arguments should match");
 });
 
-test("Restriction ge", function() {
+test("Restriction ge", function () {
     var restriction = $.db.restriction.ge("the_number", 42);
     equal(restriction.expr, "the_number >= ?", "Expression should match");
     deepEqual(restriction.args, [42], "Arguments should match");
@@ -808,7 +808,7 @@ test("Restriction ge", function() {
     deepEqual(restrictionFromInstance.args, [42], "Arguments should match");
 });
 
-test("Restriction geProperty", function() {
+test("Restriction geProperty", function () {
     var restriction = $.db.restriction.geProperty("a", "b");
     equal(restriction.expr, "a >= b", "Expression should match");
     deepEqual(restriction.args, [], "Arguments should match");
@@ -819,7 +819,7 @@ test("Restriction geProperty", function() {
     deepEqual(restrictionFromInstance.args, [], "Arguments should match");
 });
 
-test("Restriction gt", function() {
+test("Restriction gt", function () {
     var restriction = $.db.restriction.gt("the_number", 42);
     equal(restriction.expr, "the_number > ?", "Expression should match");
     deepEqual(restriction.args, [42], "Arguments should match");
@@ -830,7 +830,7 @@ test("Restriction gt", function() {
     deepEqual(restrictionFromInstance.args, [42], "Arguments should match");
 });
 
-test("Restriction gtProperty", function() {
+test("Restriction gtProperty", function () {
     var restriction = $.db.restriction.gtProperty("a", "b");
     equal(restriction.expr, "a > b", "Expression should match");
     deepEqual(restriction.args, [], "Arguments should match");
@@ -841,7 +841,7 @@ test("Restriction gtProperty", function() {
     deepEqual(restrictionFromInstance.args, [], "Arguments should match");
 });
 
-test("Restriction idEq", function() {
+test("Restriction idEq", function () {
     var restriction = $.db.restriction.idEq(88);
     equal(restriction.expr, "_ROWID_ = ?", "Expression should match");
     deepEqual(restriction.args, [88], "Arguments should match");
@@ -852,7 +852,7 @@ test("Restriction idEq", function() {
     deepEqual(restrictionFromInstance.args, [88], "Arguments should match");
 });
 
-test("Restriction in", function() {
+test("Restriction in", function () {
     var restriction = $.db.restriction.in("peas", ["chickpea", "fava beans"]);
     equal(restriction.expr, "peas in (?, ?)", "Expression should match");
     deepEqual(restriction.args, ["chickpea", "fava beans"], "Arguments should match");
@@ -863,7 +863,7 @@ test("Restriction in", function() {
     deepEqual(restrictionFromInstance.args, ["chickpea", "fava beans"], "Arguments should match");
 });
 
-test("Restriction isEmpty", function() {
+test("Restriction isEmpty", function () {
     var restriction = $.db.restriction.isEmpty("pod");
     equal(restriction.expr, "(pod IS NULL OR pod = '')", "Expression should match");
     deepEqual(restriction.args, [], "Arguments should match");
@@ -874,7 +874,7 @@ test("Restriction isEmpty", function() {
     deepEqual(restrictionFromInstance.args, [], "Arguments should match");
 });
 
-test("Restriction isNotEmpty", function() {
+test("Restriction isNotEmpty", function () {
     var restriction = $.db.restriction.isNotEmpty("pod");
     equal(restriction.expr, "(pod IS NOT NULL AND pod != '')", "Expression should match");
     deepEqual(restriction.args, [], "Arguments should match");
@@ -885,7 +885,7 @@ test("Restriction isNotEmpty", function() {
     deepEqual(restrictionFromInstance.args, [], "Arguments should match");
 });
 
-test("Restriction isNotNull", function() {
+test("Restriction isNotNull", function () {
     var restriction = $.db.restriction.isNotNull("value");
     equal(restriction.expr, "value IS NOT NULL", "Expression should match");
     deepEqual(restriction.args, [], "Arguments should match");
@@ -896,7 +896,7 @@ test("Restriction isNotNull", function() {
     deepEqual(restrictionFromInstance.args, [], "Arguments should match");
 });
 
-test("Restriction isNull", function() {
+test("Restriction isNull", function () {
     var restriction = $.db.restriction.isNull("value");
     equal(restriction.expr, "value IS NULL", "Expression should match");
     deepEqual(restriction.args, [], "Arguments should match");
@@ -907,7 +907,7 @@ test("Restriction isNull", function() {
     deepEqual(restrictionFromInstance.args, [], "Arguments should match");
 });
 
-test("Restriction le", function() {
+test("Restriction le", function () {
     var restriction = $.db.restriction.le("the_number", 42);
     equal(restriction.expr, "the_number <= ?", "Expression should match");
     deepEqual(restriction.args, [42], "Arguments should match");
@@ -918,7 +918,7 @@ test("Restriction le", function() {
     deepEqual(restrictionFromInstance.args, [42], "Arguments should match");
 });
 
-test("Restriction leProperty", function() {
+test("Restriction leProperty", function () {
     var restriction = $.db.restriction.leProperty("a", "b");
     equal(restriction.expr, "a <= b", "Expression should match");
     deepEqual(restriction.args, [], "Arguments should match");
@@ -929,7 +929,7 @@ test("Restriction leProperty", function() {
     deepEqual(restrictionFromInstance.args, [], "Arguments should match");
 });
 
-test("Restriction like", function() {
+test("Restriction like", function () {
     var restriction = $.db.restriction.like("string", "abc%");
     equal(restriction.expr, "string LIKE ?", "Expression should match");
     deepEqual(restriction.args, ["abc%"], "Arguments should match");
@@ -940,7 +940,7 @@ test("Restriction like", function() {
     deepEqual(restrictionFromInstance.args, ["abc%"], "Arguments should match");
 });
 
-test("Restriction lt", function() {
+test("Restriction lt", function () {
     var restriction = $.db.restriction.lt("the_number", 42);
     equal(restriction.expr, "the_number < ?", "Expression should match");
     deepEqual(restriction.args, [42], "Arguments should match");
@@ -951,7 +951,7 @@ test("Restriction lt", function() {
     deepEqual(restrictionFromInstance.args, [42], "Arguments should match");
 });
 
-test("Restriction ltProperty", function() {
+test("Restriction ltProperty", function () {
     var restriction = $.db.restriction.ltProperty("a", "b");
     equal(restriction.expr, "a < b", "Expression should match");
     deepEqual(restriction.args, [], "Arguments should match");
@@ -962,7 +962,7 @@ test("Restriction ltProperty", function() {
     deepEqual(restrictionFromInstance.args, [], "Arguments should match");
 });
 
-test("Restriction ne", function() {
+test("Restriction ne", function () {
     var restriction = $.db.restriction.ne("the_number", 42);
     equal(restriction.expr, "the_number != ?", "Expression should match");
     deepEqual(restriction.args, [42], "Arguments should match");
@@ -973,7 +973,7 @@ test("Restriction ne", function() {
     deepEqual(restrictionFromInstance.args, [42], "Arguments should match");
 });
 
-test("Restriction neProperty", function() {
+test("Restriction neProperty", function () {
     var restriction = $.db.restriction.neProperty("a", "b");
     equal(restriction.expr, "a != b", "Expression should match");
     deepEqual(restriction.args, [], "Arguments should match");
@@ -984,7 +984,7 @@ test("Restriction neProperty", function() {
     deepEqual(restrictionFromInstance.args, [], "Arguments should match");
 });
 
-test("Restriction not -- complex", function() {
+test("Restriction not -- complex", function () {
     var db = $.db(shortName, version, displayName, maxSize);
     var tableName = "MyTestTable";
 
@@ -1005,7 +1005,7 @@ test("Restriction not -- complex", function() {
     deepEqual(restrictionFromInstance.args, ["a", "b"], "Arguments should match");
 });
 
-test("Restriction or -- complex", function() {
+test("Restriction or -- complex", function () {
     var db = $.db(shortName, version, displayName, maxSize);
     var tableName = "MyTestTable";
 
@@ -1031,10 +1031,10 @@ test("Restriction or -- complex", function() {
 });
 
 /*
-test("Restriction conjunction -- complex", function() {});
+ test("Restriction conjunction -- complex", function() {});
 
-test("Restriction disjunction -- complex", function() {});
-*/
+ test("Restriction disjunction -- complex", function() {});
+ */
 
 module("Can select data", {
     setup: function () {
@@ -1089,45 +1089,45 @@ module("Can select data", {
                                 start();
                             }
                         }).insert(tableName, {
-                            data: {
-                                name: "Jane Doe",
-                                rank: "Private",
-                                male: 0,
-                                age: 18
-                            },
-                            success: function () {
-                                start();
-                            },
-                            failure: function () {
-                                start();
-                            }
-                        }).insert(tableName, {
-                            data: {
-                                name: "Jackie Robinson",
-                                rank: "General",
-                                male: 1,
-                                age: 42
-                            },
-                            success: function () {
-                                start();
-                            },
-                            failure: function () {
-                                start();
-                            }
-                        }).insert(tableName, {
-                            data: {
-                                name: "John Doe",
-                                rank: "Commander",
-                                male: 1,
-                                age: 55
-                            },
-                            success: function () {
-                                start();
-                            },
-                            failure: function () {
-                                start();
-                            }
-                        });
+                                data: {
+                                    name: "Jane Doe",
+                                    rank: "Private",
+                                    male: 0,
+                                    age: 18
+                                },
+                                success: function () {
+                                    start();
+                                },
+                                failure: function () {
+                                    start();
+                                }
+                            }).insert(tableName, {
+                                data: {
+                                    name: "Jackie Robinson",
+                                    rank: "General",
+                                    male: 1,
+                                    age: 42
+                                },
+                                success: function () {
+                                    start();
+                                },
+                                failure: function () {
+                                    start();
+                                }
+                            }).insert(tableName, {
+                                data: {
+                                    name: "John Doe",
+                                    rank: "Commander",
+                                    male: 1,
+                                    age: 55
+                                },
+                                success: function () {
+                                    start();
+                                },
+                                failure: function () {
+                                    start();
+                                }
+                            });
                     },
                     error: function () {
                         start(4);
@@ -1155,7 +1155,7 @@ module("Can select data", {
     }
 });
 
-test("Can select everything", 1, function() {
+test("Can select everything", 1, function () {
     var db = $.db(shortName, version, displayName, maxSize);
     var tableName = "MyTestTable";
 
@@ -1172,7 +1172,7 @@ test("Can select everything", 1, function() {
     db.criteria(tableName).list(success, error);
 }, true);
 
-test("Can select John Doe", 2, function() {
+test("Can select John Doe", 2, function () {
     var db = $.db(shortName, version, displayName, maxSize);
     var tableName = "MyTestTable";
 
