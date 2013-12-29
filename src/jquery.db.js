@@ -145,7 +145,7 @@
      *
      * @returns {JQueryDatabaseCriteria}
      */
-    JQueryDatabaseCriteria.prototype.remove = function (successCallback, errorCallback) {
+    JQueryDatabaseCriteria.prototype.destroy = function (successCallback, errorCallback) {
         var sql = "DELETE FROM " + this.tableName;
         this._executeCriteria(sql, successCallback, errorCallback);
         return this;

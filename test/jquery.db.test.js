@@ -1439,7 +1439,7 @@ test("Can delete everything", 1, function () {
         start();
     };
 
-    db.criteria(tableName).remove(success, error);
+    db.criteria(tableName).destroy(success, error);
 }, true);
 
 test("Can delete John Doe", 1, function () {
@@ -1456,5 +1456,5 @@ test("Can delete John Doe", 1, function () {
         start();
     };
 
-    db.criteria(tableName).add($.db.restriction.eq("name", "Jackie Robinson")).remove(success, error);
+    db.criteria(tableName).add($.db.restriction.eq("name", "Jackie Robinson")).destroy(success, error);
 }, true);
