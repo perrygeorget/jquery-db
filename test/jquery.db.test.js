@@ -171,9 +171,7 @@ test("Creation callback has JQueryDatabase as its arguments.", 1, function () {
         clearTimeout(timeout);
         start();
     });
-
-    stop();
-});
+}, true);
 
 
 module("Database version management", {});
@@ -192,9 +190,7 @@ test("Can get version when set", 1, function () {
         clearTimeout(timeout);
         start();
     });
-
-    stop();
-});
+}, true);
 
 test("Can add a migration", 1, function () {
     var timeout = setTimeout(function () {
@@ -235,9 +231,7 @@ test("Can not migrate when version not found.", 2, function () {
 
         start();
     });
-
-    stop();
-});
+}, true);
 
 //test("Can migrate to a found version.", 3, function() {
 //    var timeout = setTimeout(function() {
@@ -621,7 +615,6 @@ test("Has the expected tables", 1, function () {
     db.tables(function (tables) {
         if (tablesTimeout) {
             window.clearTimeout(tablesTimeout);
-            tablesTimeout = undefined;
 
             deepEqual(tables, ["MyTestTable1", "MyTestTable2"], msg);
             start();
@@ -681,7 +674,6 @@ test("Can insert data into table that exists", 4, function () {
     var tableName = "MyTestTable";
     var value = "hello world";
 
-    stop();
     db.insert(tableName, {
         data: {
             value: value
@@ -708,14 +700,13 @@ test("Can insert data into table that exists", 4, function () {
                     start();
                 }
             );
-            start();
         },
         failure: function (transaction, error) {
             ok(false, error.message);
-            start(2);
+            start();
         }
     });
-});
+}, true);
 
 
 module("Restrictions generate correct SQL snippets");
@@ -1089,45 +1080,45 @@ module("Can select data", {
                                 start();
                             }
                         }).insert(tableName, {
-                                data: {
-                                    name: "Jane Doe",
-                                    rank: "Private",
-                                    male: 0,
-                                    age: 18
-                                },
-                                success: function () {
-                                    start();
-                                },
-                                failure: function () {
-                                    start();
-                                }
-                            }).insert(tableName, {
-                                data: {
-                                    name: "Jackie Robinson",
-                                    rank: "General",
-                                    male: 1,
-                                    age: 42
-                                },
-                                success: function () {
-                                    start();
-                                },
-                                failure: function () {
-                                    start();
-                                }
-                            }).insert(tableName, {
-                                data: {
-                                    name: "John Doe",
-                                    rank: "Commander",
-                                    male: 1,
-                                    age: 55
-                                },
-                                success: function () {
-                                    start();
-                                },
-                                failure: function () {
-                                    start();
-                                }
-                            });
+                            data: {
+                                name: "Jane Doe",
+                                rank: "Private",
+                                male: 0,
+                                age: 18
+                            },
+                            success: function () {
+                                start();
+                            },
+                            failure: function () {
+                                start();
+                            }
+                        }).insert(tableName, {
+                            data: {
+                                name: "Jackie Robinson",
+                                rank: "General",
+                                male: 1,
+                                age: 42
+                            },
+                            success: function () {
+                                start();
+                            },
+                            failure: function () {
+                                start();
+                            }
+                        }).insert(tableName, {
+                            data: {
+                                name: "John Doe",
+                                rank: "Commander",
+                                male: 1,
+                                age: 55
+                            },
+                            success: function () {
+                                start();
+                            },
+                            failure: function () {
+                                start();
+                            }
+                        });
                     },
                     error: function () {
                         start(4);
@@ -1189,4 +1180,164 @@ test("Can select John Doe", 2, function () {
     };
 
     db.criteria(tableName).add($.db.restriction.eq("name", "Jackie Robinson")).list(success, error);
+}, true);
+
+
+module("Can delete data", {
+    setup: function () {
+        stop(3);
+        var db = $.db(shortName, version, displayName, maxSize);
+        var tableName = "MyTestTable";
+        db.dropTable({
+            name: tableName,
+            ignore: true,
+            success: function () {
+                db.createTable({
+                    name: tableName,
+                    columns: [
+                        {
+                            name: "id",
+                            type: "INTEGER",
+                            constraint: "PRIMARY KEY AUTOINCREMENT"
+                        },
+                        {
+                            name: "name",
+                            type: "TEXT",
+                            constraint: "NOT NULL"
+                        },
+                        {
+                            name: "rank",
+                            type: "TEXT",
+                            constraint: "NOT NULL"
+                        },
+                        {
+                            name: "male",
+                            type: "INT",
+                            constraint: "NOT NULL"
+                        },
+                        {
+                            name: "age",
+                            type: "INT",
+                            constraint: "NOT NULL"
+                        }
+                    ],
+                    success: function () {
+                        db.insert(tableName, {
+                            data: {
+                                name: "John Doe",
+                                rank: "Private",
+                                male: 1,
+                                age: 18
+                            },
+                            success: function () {
+                                start();
+                            },
+                            failure: function () {
+                                start();
+                            }
+                        }).insert(tableName, {
+                            data: {
+                                name: "Jane Doe",
+                                rank: "Private",
+                                male: 0,
+                                age: 18
+                            },
+                            success: function () {
+                                start();
+                            },
+                            failure: function () {
+                                start();
+                            }
+                        }).insert(tableName, {
+                            data: {
+                                name: "Jackie Robinson",
+                                rank: "General",
+                                male: 1,
+                                age: 42
+                            },
+                            success: function () {
+                                start();
+                            },
+                            failure: function () {
+                                start();
+                            }
+                        }).insert(tableName, {
+                            data: {
+                                name: "John Doe",
+                                rank: "Commander",
+                                male: 1,
+                                age: 55
+                            },
+                            success: function () {
+                                start();
+                            },
+                            failure: function () {
+                                start();
+                            }
+                        });
+                    },
+                    error: function () {
+                        start(4);
+                    }
+                });
+            },
+            failure: function () {
+                start(4);
+            }
+        });
+    },
+    teardown: function () {
+        stop(1);
+        $.db(shortName, version, displayName, maxSize)
+            .dropTable({
+                name: "MyTestTable",
+                ignore: true,
+                success: function () {
+                    start();
+                },
+                failure: function () {
+                    start();
+                }
+            });
+    }
+});
+
+test("Can delete everything", 1, function () {
+    var db = $.db(shortName, version, displayName, maxSize);
+    var tableName = "MyTestTable";
+
+    var success = function () {
+        db.criteria(tableName).count(function (transaction, resultSet) {
+            var actual = resultSet.rows.item(0);
+            equal(actual.count, 0);
+            start();
+        }, function (transaction, error) {
+            ok(false, "Could not verify deletion ... " + error.message);
+            start();
+        });
+    };
+
+    var error = function (transaction, error) {
+        ok(false, error.message);
+        start();
+    };
+
+    db.criteria(tableName).remove(success, error);
+}, true);
+
+test("Can delete John Doe", 1, function () {
+    var db = $.db(shortName, version, displayName, maxSize);
+    var tableName = "MyTestTable";
+
+    var success = function (transaction, resultSet) {
+        equal(resultSet.rowsAffected, 1, "Expected 1 records");
+        start();
+    };
+
+    var error = function (transaction, error) {
+        ok(false, error.message);
+        start();
+    };
+
+    db.criteria(tableName).add($.db.restriction.eq("name", "Jackie Robinson")).remove(success, error);
 }, true);
