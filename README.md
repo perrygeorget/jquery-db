@@ -35,10 +35,10 @@ All database operations happen asynchronously.
             "name TEXT",
             "rank TEXT",
         ],
-        success: function () {
+        done: function () {
         	console.log("Yay!  My first table.");
         },
-        failure: function () {
+        fail: function () {
         	console.log("Something went wrong....");
         }
     });
@@ -65,10 +65,10 @@ Outputs:
             name: "Pepper",
             rank: "Sergeant"
         },
-        success: function () {
+        done: function () {
         	console.log("Yay!  I created a person!");
         },
-        failure: function () {
+        fail: function () {
         	console.log("Something went wrong....");
         }
     });

@@ -435,7 +435,7 @@
      * @function
      * @memberOf JQueryDatabase
      *
-     * @param {{name: String, columns: Array<{name: String, type: String, constraint: String}>, constraints: Array<String>, dropOrIgnore: String, success: SQLStatementCallback, error: SQLStatementErrorCallback}} params
+     * @param {{name: String, columns: Array<{name: String, type: String, constraint: String}>, constraints: Array<String>, dropOrIgnore: String, done: SQLStatementCallback|Function, fail: SQLStatementErrorCallback|Function}} params
      *
      * @return {JQueryDatabase}
      */
@@ -472,12 +472,12 @@
             }
         }
         var successCallback;
-        if (params.hasOwnProperty("success")) {
-            successCallback = params.success;
+        if (params.hasOwnProperty("done")) {
+            successCallback = params.done;
         }
         var errorCallback;
-        if (params.hasOwnProperty("error")) {
-            errorCallback = params.error;
+        if (params.hasOwnProperty("fail")) {
+            errorCallback = params.fail;
         }
 
         var sql = "CREATE TABLE ";
@@ -509,7 +509,7 @@
      * @function
      * @memberOf JQueryDatabase
      *
-     * @param {{name: String, ignore: Boolean, success: Function, error: Function}} params
+     * @param {{name: String, ignore: Boolean, done: SQLStatementCallback|Function, fail: SQLStatementErrorCallback|Function}} params
      *
      * @returns {JQueryDatabase}
      */
@@ -521,13 +521,13 @@
         var ignore = params.hasOwnProperty("ignore") && params.ignore;
 
         var successCallback;
-        if (params.hasOwnProperty("success")) {
-            successCallback = params.success;
+        if (params.hasOwnProperty("done")) {
+            successCallback = params.done;
         }
 
         var errorCallback;
-        if (params.hasOwnProperty("error")) {
-            errorCallback = params.error;
+        if (params.hasOwnProperty("fail")) {
+            errorCallback = params.fail;
         }
 
         var sql = "DROP TABLE ";
@@ -550,7 +550,7 @@
      * @memberOf JQueryDatabase
      *
      * @param {String} tableName
-     * @param {{data: {}, success: SQLStatementCallback|Function, error: SQLStatementErrorCallback|Function}} params
+     * @param {{data: {}, done: SQLStatementCallback|Function, fail: SQLStatementErrorCallback|Function}} params
      *
      * @returns {JQueryDatabase}
      */
@@ -568,13 +568,13 @@
         });
 
         var successCallback;
-        if (params.hasOwnProperty("success")) {
-            successCallback = params.success;
+        if (params.hasOwnProperty("done")) {
+            successCallback = params.done;
         }
 
         var errorCallback;
-        if (params.hasOwnProperty("error")) {
-            errorCallback = params.error;
+        if (params.hasOwnProperty("fail")) {
+            errorCallback = params.fail;
         }
 
         var sql = "INSERT INTO " + tableName + " (" + columns.join(",") + ") VALUES (" + placeholders.join(",") + ")";

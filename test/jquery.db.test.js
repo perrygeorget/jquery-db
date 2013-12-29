@@ -19,10 +19,10 @@ module("Table creation", {
             .dropTable({
                 name: "MyTestTable",
                 ignore: true,
-                success: function () {
+                done: function () {
                     start();
                 },
-                failure: function () {
+                fail: function () {
                     start();
                 }
             });
@@ -33,10 +33,10 @@ module("Table creation", {
             .dropTable({
                 name: "MyTestTable",
                 ignore: true,
-                success: function () {
+                done: function () {
                     start();
                 },
-                failure: function () {
+                fail: function () {
                     start();
                 }
             });
@@ -53,11 +53,136 @@ test("Create a table with a simple definition", 1, function () {
             "id INT",
             "value TEXT"
         ],
-        success: function () {
+        done: function () {
             ok(true, msg);
             start();
         },
-        error: function (transaction, error) {
+        fail: function (transaction, error) {
+            ok(false, msg + " :: " + error.message);
+            start();
+        }
+    });
+}, true);
+
+test("Create a table can drop existing", 1, function () {
+    var msg = "should have created a table";
+    var db = $.db(shortName, version, displayName, maxSize);
+
+    var verify = function () {
+        db.insert("MyTestTable", {
+            data: {
+                id: 1,
+                value: "test"
+            },
+            done: function () {
+                db.criteria("MyTestTable").list(function (transaction, resultSet) {
+                    var actual = resultSet.rows.item(0);
+
+                    ok(actual.hasOwnProperty("other"), msg);
+                    start();
+                }, function (transaction, error) {
+                    ok(false, msg + " :: " + error.message);
+                    start();
+                });
+            },
+            fail: function (transaction, error) {
+                ok(false, msg + " :: " + error.message);
+                start();
+            }
+        });
+    };
+
+    var realTest = function () {
+        db.createTable({
+            name: "MyTestTable",
+            columns: [
+                "id INT",
+                "value TEXT",
+                "other TEXT"
+            ],
+            dropOrIgnore: "drop",
+            done: function () {
+                verify();
+            },
+            fail: function (transaction, error) {
+                ok(false, msg + " :: " + error.message);
+                start();
+            }
+        });
+    };
+
+    db.createTable({
+        name: "MyTestTable",
+        columns: [
+            "id INT",
+            "value TEXT"
+        ],
+        done: function () {
+            realTest();
+        },
+        fail: function (transaction, error) {
+            start();
+        }
+    });
+}, true);
+
+test("Create a table can ignore existing", 1, function () {
+    var msg = "should have created a first table only";
+    var db = $.db(shortName, version, displayName, maxSize);
+
+    var verify = function () {
+        db.insert("MyTestTable", {
+            data: {
+                id: 1,
+                value: "test"
+            },
+            done: function () {
+                db.criteria("MyTestTable").list(function (transaction, resultSet) {
+                    var actual = resultSet.rows.item(0);
+
+                    ok(!actual.hasOwnProperty("other"), msg);
+                    start();
+                }, function (transaction, error) {
+                    ok(false, msg + " :: " + error.message);
+                    start();
+                });
+            },
+            fail: function (transaction, error) {
+                ok(false, msg + " :: " + error.message);
+                start();
+            }
+        });
+    };
+
+    var realTest = function() {
+        db.createTable({
+            name: "MyTestTable",
+            columns: [
+                "id INT",
+                "value TEXT",
+                "other TEXT"
+            ],
+            dropOrIgnore: "ignore",
+            done: function () {
+                verify();
+            },
+            fail: function (transaction, error) {
+                ok(false, msg + " :: " + error.message);
+                start();
+            }
+        });
+    };
+
+    db.createTable({
+        name: "MyTestTable",
+        columns: [
+            "id INT",
+            "value TEXT"
+        ],
+        done: function () {
+            realTest();
+        },
+        fail: function (transaction, error) {
             ok(false, msg + " :: " + error.message);
             start();
         }
@@ -82,11 +207,11 @@ test("Create a table with a complex column definition", 1, function () {
                 constraint: "NOT NULL"
             }
         ],
-        success: function () {
+        done: function () {
             ok(true, msg);
             start();
         },
-        error: function (transaction, error) {
+        fail: function (transaction, error) {
             ok(false, msg + " :: " + error.message);
             start();
         }
@@ -113,11 +238,11 @@ test("Create a table with simple constraints", 1, function () {
         constraints: [
             "UNIQUE (value)"
         ],
-        success: function () {
+        done: function () {
             ok(true, msg);
             start();
         },
-        error: function (transaction, error) {
+        fail: function (transaction, error) {
             ok(false, msg + " :: " + error.message);
             start();
         }
@@ -134,24 +259,24 @@ test("Can not create table twice", 1, function () {
             "id INT",
             "value TEXT"
         ],
-        success: function () {
+        done: function () {
             db.createTable({
                 name: "MyTestTable",
                 columns: [
                     "id INT",
                     "value TEXT"
                 ],
-                success: function () {
+                done: function () {
                     ok(false, msg);
                     start();
                 },
-                error: function () {
+                fail: function () {
                     ok(true, msg);
                     start();
                 }
             });
         },
-        error: function () {
+        fail: function () {
             ok(false, msg);
             start();
         }
@@ -251,11 +376,11 @@ test("Can not migrate when version not found.", 2, function () {
 //                "id INT",
 //                "value TEXT"
 //            ],
-//            success: function () {
+//            done: function () {
 //                ok(true);
 //                start();
 //            },
-//            error: function () {
+//            fail: function () {
 //                ok(false);
 //                start();
 //            }
@@ -295,7 +420,7 @@ module("Table deletion", {
         db.dropTable({
             name: "MyTestTable",
             ignore: true,
-            success: function () {
+            done: function () {
                 start();
                 db.createTable({
                     name: "MyTestTable",
@@ -303,15 +428,15 @@ module("Table deletion", {
                         "id INT",
                         "value TEXT"
                     ],
-                    success: function () {
+                    done: function () {
                         start();
                     },
-                    error: function () {
+                    fail: function () {
                         start();
                     }
                 });
             },
-            failure: function () {
+            fail: function () {
                 start(2);
             }
         });
@@ -322,10 +447,10 @@ module("Table deletion", {
             .dropTable({
                 name: "MyTestTable",
                 ignore: true,
-                success: function () {
+                done: function () {
                     start();
                 },
-                failure: function () {
+                fail: function () {
                     start();
                 }
             });
@@ -338,11 +463,11 @@ test("Drop a table", 1, function () {
 
     db.dropTable({
         name: "MyTestTable",
-        success: function () {
+        done: function () {
             ok(true, msg);
             start();
         },
-        error: function (transaction, error) {
+        fail: function (transaction, error) {
             ok(false, msg + " :: " + error.message);
             start();
         }
@@ -355,20 +480,20 @@ test("Can not drop the same table twice", 1, function () {
 
     db.dropTable({
         name: "MyTestTable",
-        success: function () {
+        done: function () {
             db.dropTable({
                 name: "MyTestTable",
-                success: function () {
+                done: function () {
                     ok(false, msg);
                     start();
                 },
-                error: function () {
+                fail: function () {
                     ok(true, msg);
                     start();
                 }
             });
         },
-        error: function (transaction, error) {
+        fail: function (transaction, error) {
             ok(false, msg + " :: " + error.message);
             start();
         }
@@ -383,10 +508,10 @@ module("Table deletion (where table does not exist)", {
         db.dropTable({
             name: "MyTestTable",
             ignore: true,
-            success: function () {
+            done: function () {
                 start();
             },
-            failure: function () {
+            fail: function () {
                 start();
             }
         });
@@ -399,11 +524,11 @@ test("Can not drop a table that does not exist", 1, function () {
 
     db.dropTable({
         name: "MyTestTable",
-        success: function () {
+        done: function () {
             ok(false, msg);
             start();
         },
-        error: function () {
+        fail: function () {
             ok(true, msg);
             start();
         }
@@ -417,11 +542,11 @@ test("Can ignore dropping a table that does not exist", 1, function () {
     db.dropTable({
         name: "MyTestTable",
         ignore: true,
-        success: function () {
+        done: function () {
             ok(true, msg);
             start();
         },
-        error: function (transaction, error) {
+        fail: function (transaction, error) {
             ok(false, msg + " :: " + error.message);
             start();
         }
@@ -436,7 +561,7 @@ module("Show tables with one table", {
         db.dropTable({
             name: "MyTestTable",
             ignore: true,
-            success: function () {
+            done: function () {
                 start();
                 db.createTable({
                     name: "MyTestTable",
@@ -444,15 +569,15 @@ module("Show tables with one table", {
                         "id INT",
                         "value TEXT"
                     ],
-                    success: function () {
+                    done: function () {
                         start();
                     },
-                    error: function () {
+                    fail: function () {
                         start();
                     }
                 });
             },
-            failure: function () {
+            fail: function () {
                 start(2);
             }
         });
@@ -463,10 +588,10 @@ module("Show tables with one table", {
             .dropTable({
                 name: "MyTestTable",
                 ignore: true,
-                success: function () {
+                done: function () {
                     start();
                 },
-                failure: function () {
+                fail: function () {
                     start();
                 }
             });
@@ -484,13 +609,11 @@ test("Has just 1 table", 1, function () {
     }, 250);
 
     db.tables(function (tables) {
-        if (tablesTimeout) {
-            window.clearTimeout(tablesTimeout);
-            tablesTimeout = undefined;
+        window.clearTimeout(tablesTimeout);
+        tablesTimeout = undefined;
 
-            equal(tables.length, 1, msg);
-            start();
-        }
+        equal(tables.length, 1, msg);
+        start();
     });
 }, true);
 
@@ -505,13 +628,11 @@ test("Has the expected table", 1, function () {
     }, 250);
 
     db.tables(function (tables) {
-        if (tablesTimeout) {
-            window.clearTimeout(tablesTimeout);
-            tablesTimeout = undefined;
+        window.clearTimeout(tablesTimeout);
+        tablesTimeout = undefined;
 
-            equal(tables[0], "MyTestTable", msg);
-            start();
-        }
+        equal(tables[0], "MyTestTable", msg);
+        start();
     });
 }, true);
 
@@ -523,7 +644,7 @@ module("Show tables with two table", {
         db.dropTable({
             name: "MyTestTable",
             ignore: true,
-            success: function () {
+            done: function () {
                 start();
                 db.createTable({
                     name: "MyTestTable1",
@@ -531,10 +652,10 @@ module("Show tables with two table", {
                         "id INT",
                         "value TEXT"
                     ],
-                    success: function () {
+                    done: function () {
                         start();
                     },
-                    error: function () {
+                    fail: function () {
                         start();
                     }
                 }).createTable({
@@ -543,15 +664,15 @@ module("Show tables with two table", {
                             "id INT",
                             "value TEXT"
                         ],
-                        success: function () {
+                        done: function () {
                             start();
                         },
-                        error: function () {
+                        fail: function () {
                             start();
                         }
                     });
             },
-            failure: function () {
+            fail: function () {
                 start(2);
             }
         });
@@ -562,19 +683,19 @@ module("Show tables with two table", {
             .dropTable({
                 name: "MyTestTable1",
                 ignore: true,
-                success: function () {
+                done: function () {
                     start();
                 },
-                failure: function () {
+                fail: function () {
                     start();
                 }
             }).dropTable({
                 name: "MyTestTable2",
                 ignore: true,
-                success: function () {
+                done: function () {
                     start();
                 },
-                failure: function () {
+                fail: function () {
                     start();
                 }
             });
@@ -592,13 +713,11 @@ test("Has just 2 tables", 1, function () {
     }, 250);
 
     db.tables(function (tables) {
-        if (tablesTimeout) {
-            window.clearTimeout(tablesTimeout);
-            tablesTimeout = undefined;
+        window.clearTimeout(tablesTimeout);
+        tablesTimeout = undefined;
 
-            equal(tables.length, 2, msg);
-            start();
-        }
+        equal(tables.length, 2, msg);
+        start();
     });
 }, true);
 
@@ -613,12 +732,10 @@ test("Has the expected tables", 1, function () {
     }, 250);
 
     db.tables(function (tables) {
-        if (tablesTimeout) {
-            window.clearTimeout(tablesTimeout);
+        window.clearTimeout(tablesTimeout);
 
-            deepEqual(tables, ["MyTestTable1", "MyTestTable2"], msg);
-            start();
-        }
+        deepEqual(tables, ["MyTestTable1", "MyTestTable2"], msg);
+        start();
     });
 }, true);
 
@@ -630,7 +747,7 @@ module("Can insert data", {
         db.dropTable({
             name: "MyTestTable",
             ignore: true,
-            success: function () {
+            done: function () {
                 db.createTable({
                     name: "MyTestTable",
                     columns: [
@@ -640,15 +757,15 @@ module("Can insert data", {
                             constraint: "NOT NULL"
                         }
                     ],
-                    success: function () {
+                    done: function () {
                         start();
                     },
-                    error: function () {
+                    fail: function () {
                         start();
                     }
                 });
             },
-            failure: function () {
+            fail: function () {
                 start();
             }
         });
@@ -659,10 +776,10 @@ module("Can insert data", {
             .dropTable({
                 name: "MyTestTable",
                 ignore: true,
-                success: function () {
+                done: function () {
                     start();
                 },
-                failure: function () {
+                fail: function () {
                     start();
                 }
             });
@@ -678,7 +795,7 @@ test("Can insert data into table that exists", 4, function () {
         data: {
             value: value
         },
-        success: function (transaction, results) {
+        done: function (transaction, results) {
             var id = results.insertId;
             var affected = results.rowsAffected;
 
@@ -701,7 +818,7 @@ test("Can insert data into table that exists", 4, function () {
                 }
             );
         },
-        failure: function (transaction, error) {
+        fail: function (transaction, error) {
             ok(false, error.message);
             start();
         }
@@ -1035,7 +1152,7 @@ module("Can select data", {
         db.dropTable({
             name: tableName,
             ignore: true,
-            success: function () {
+            done: function () {
                 db.createTable({
                     name: tableName,
                     columns: [
@@ -1065,7 +1182,7 @@ module("Can select data", {
                             constraint: "NOT NULL"
                         }
                     ],
-                    success: function () {
+                    done: function () {
                         db.insert(tableName, {
                             data: {
                                 name: "John Doe",
@@ -1073,10 +1190,10 @@ module("Can select data", {
                                 male: 1,
                                 age: 18
                             },
-                            success: function () {
+                            done: function () {
                                 start();
                             },
-                            failure: function () {
+                            fail: function () {
                                 start();
                             }
                         }).insert(tableName, {
@@ -1086,10 +1203,10 @@ module("Can select data", {
                                 male: 0,
                                 age: 18
                             },
-                            success: function () {
+                            done: function () {
                                 start();
                             },
-                            failure: function () {
+                            fail: function () {
                                 start();
                             }
                         }).insert(tableName, {
@@ -1099,10 +1216,10 @@ module("Can select data", {
                                 male: 1,
                                 age: 42
                             },
-                            success: function () {
+                            done: function () {
                                 start();
                             },
-                            failure: function () {
+                            fail: function () {
                                 start();
                             }
                         }).insert(tableName, {
@@ -1112,20 +1229,20 @@ module("Can select data", {
                                 male: 1,
                                 age: 55
                             },
-                            success: function () {
+                            done: function () {
                                 start();
                             },
-                            failure: function () {
+                            fail: function () {
                                 start();
                             }
                         });
                     },
-                    error: function () {
+                    fail: function () {
                         start(4);
                     }
                 });
             },
-            failure: function () {
+            fail: function () {
                 start(4);
             }
         });
@@ -1136,10 +1253,10 @@ module("Can select data", {
             .dropTable({
                 name: "MyTestTable",
                 ignore: true,
-                success: function () {
+                done: function () {
                     start();
                 },
-                failure: function () {
+                fail: function () {
                     start();
                 }
             });
@@ -1191,7 +1308,7 @@ module("Can delete data", {
         db.dropTable({
             name: tableName,
             ignore: true,
-            success: function () {
+            done: function () {
                 db.createTable({
                     name: tableName,
                     columns: [
@@ -1221,7 +1338,7 @@ module("Can delete data", {
                             constraint: "NOT NULL"
                         }
                     ],
-                    success: function () {
+                    done: function () {
                         db.insert(tableName, {
                             data: {
                                 name: "John Doe",
@@ -1229,10 +1346,10 @@ module("Can delete data", {
                                 male: 1,
                                 age: 18
                             },
-                            success: function () {
+                            done: function () {
                                 start();
                             },
-                            failure: function () {
+                            fail: function () {
                                 start();
                             }
                         }).insert(tableName, {
@@ -1242,10 +1359,10 @@ module("Can delete data", {
                                 male: 0,
                                 age: 18
                             },
-                            success: function () {
+                            done: function () {
                                 start();
                             },
-                            failure: function () {
+                            fail: function () {
                                 start();
                             }
                         }).insert(tableName, {
@@ -1255,10 +1372,10 @@ module("Can delete data", {
                                 male: 1,
                                 age: 42
                             },
-                            success: function () {
+                            done: function () {
                                 start();
                             },
-                            failure: function () {
+                            fail: function () {
                                 start();
                             }
                         }).insert(tableName, {
@@ -1268,20 +1385,20 @@ module("Can delete data", {
                                 male: 1,
                                 age: 55
                             },
-                            success: function () {
+                            done: function () {
                                 start();
                             },
-                            failure: function () {
+                            fail: function () {
                                 start();
                             }
                         });
                     },
-                    error: function () {
+                    fail: function () {
                         start(4);
                     }
                 });
             },
-            failure: function () {
+            fail: function () {
                 start(4);
             }
         });
@@ -1292,10 +1409,10 @@ module("Can delete data", {
             .dropTable({
                 name: "MyTestTable",
                 ignore: true,
-                success: function () {
+                done: function () {
                     start();
                 },
-                failure: function () {
+                fail: function () {
                     start();
                 }
             });
