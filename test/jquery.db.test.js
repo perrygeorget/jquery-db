@@ -120,7 +120,7 @@ test("Create a table can drop existing", 1, function () {
         done: function () {
             realTest();
         },
-        fail: function (transaction, error) {
+        fail: function () {
             start();
         }
     });
@@ -324,7 +324,7 @@ test("Can add a migration", 1, function () {
 
     var seed = Math.floor(Math.random() * 1000);
     var shortName = "test_db_" + new Date().getTime() + "_" + seed;
-    var db = $.db(shortName, "", "Version Test", 1024, function (db) {
+    var db = $.db(shortName, "", "Version Test", 1024, function () {
         clearTimeout(timeout);
         start();
     });

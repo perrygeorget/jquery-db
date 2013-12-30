@@ -20,12 +20,12 @@
     "use strict";
 
     /**
-     * Simplified API for retrieving entities by composing a criterion via chaining
+     * Simplified API for retrieving entities by composing a criterion via chaining.
      *
      * @name JQueryDatabaseCriteria
      *
-     * @param {JQueryDatabase} db
-     * @param {String} tableName
+     * @param {JQueryDatabase} db - The database object
+     * @param {String} tableName - The name of the table where the criteria will be applied
      *
      * @constructor
      */
@@ -45,7 +45,7 @@
      * @function
      * @memberOf JQueryDatabaseCriteria
      *
-     * @param {Number} count
+     * @param {Number} count - The maximum number of records to be returned.
      *
      * @returns {JQueryDatabaseCriteria}
      */
@@ -60,7 +60,7 @@
      * @function
      * @memberOf JQueryDatabaseCriteria
      *
-     * @param {Number} offset
+     * @param {Number} offset - The number of rows to skip before returning rows.
      *
      * @returns {JQueryDatabaseCriteria}
      */
@@ -75,7 +75,7 @@
      * @function
      * @memberOf JQueryDatabaseCriteria
      *
-     * @param {JQueryDatabaseOrder} order
+     * @param {JQueryDatabaseOrder} order - A specification of the order of rows to be returned.
      *
      * @returns {JQueryDatabaseCriteria}
      */
@@ -90,7 +90,7 @@
      * @function
      * @memberOf JQueryDatabaseCriteria
      *
-     * @param {JQueryDatabaseRestriction} restriction
+     * @param {JQueryDatabaseRestriction} restriction - A specification of data to be filtered.
      *
      * @returns {JQueryDatabaseCriteria}
      */
@@ -106,8 +106,8 @@
      * @function
      * @memberOf JQueryDatabaseCriteria
      *
-     * @param {SQLStatementCallback|Function} successCallback Handles completed queries
-     * @param {SQLStatementErrorCallback|Function} errorCallback Handles failed queries
+     * @param {SQLStatementCallback|Function} [successCallback] - Handles completed queries
+     * @param {SQLStatementErrorCallback|Function} [errorCallback] - Handles failed queries
      *
      * @returns {JQueryDatabaseCriteria}
      */
@@ -123,8 +123,8 @@
      * @function
      * @memberOf JQueryDatabaseCriteria
      *
-     * @param {SQLStatementCallback|Function} successCallback Handles completed queries
-     * @param {SQLStatementErrorCallback|Function} errorCallback Handles failed queries
+     * @param {SQLStatementCallback|Function} [successCallback] - Handles completed queries
+     * @param {SQLStatementErrorCallback|Function} [errorCallback] - Handles failed queries
      *
      * @returns {JQueryDatabaseCriteria}
      */
@@ -135,13 +135,41 @@
     };
 
     /**
-     * Removed records from the database.
+     * Updates records in the database.
      *
      * @function
      * @memberOf JQueryDatabaseCriteria
      *
-     * @param {SQLStatementCallback|Function} successCallback Handles completed queries
-     * @param {SQLStatementErrorCallback|Function} errorCallback Handles failed queries
+     * @param {{}} data The data to be updated.
+     * @param {SQLStatementCallback|Function} [successCallback] - The callback for completed queries.
+     * @param {SQLStatementErrorCallback|Function} [errorCallback] - The callback for failed queries.
+     *
+     * @returns {JQueryDatabaseCriteria}
+     */
+    JQueryDatabaseCriteria.prototype.update = function (data, successCallback, errorCallback) {
+        data = data || {};
+
+        var values = [];
+        var assignments = [];
+
+        jQuery.each(data, function (index, obj) {
+            values.push(obj);
+            assignments.push(index + " = ?");
+        });
+
+        var sql = "UPDATE " + this.tableName + " SET " + assignments.join(",");
+        this._executeCriteria(sql, successCallback, errorCallback);
+        return this;
+    };
+
+    /**
+     * Removes records from the database.
+     *
+     * @function
+     * @memberOf JQueryDatabaseCriteria
+     *
+     * @param {SQLStatementCallback|Function} [successCallback] - The callback for completed queries.
+     * @param {SQLStatementErrorCallback|Function} [errorCallback] - The callback for failed queries.
      *
      * @returns {JQueryDatabaseCriteria}
      */
@@ -157,8 +185,8 @@
      * @function
      * @memberOf JQueryDatabaseCriteria
      *
-     * @param {Array} args
-     * @returns {string} where clause
+     * @param {Array} args - Array where arguments are contained.  (Will have values for where clause added to it.)
+     * @returns {string} where - The where clause for the query.
      *
      * @protected
      */
@@ -179,9 +207,9 @@
      * @function
      * @memberOf JQueryDatabaseCriteria
      *
-     * @param {String} sql the unfiltered unrestricted statement
-     * @param {SQLStatementCallback|Function} successCallback Handles completed queries
-     * @param {SQLStatementErrorCallback|Function} errorCallback Handles failed queries
+     * @param {String} sql - The unfiltered unrestricted statement.
+     * @param {SQLStatementCallback|Function} [successCallback] - The callback for completed queries.
+     * @param {SQLStatementErrorCallback|Function} [errorCallback] - The callback for failed queries.
      *
      * @private
      */
@@ -193,7 +221,6 @@
             sql = sql + " WHERE " + whereClause;
         }
         if (this.order.length > 0) {
-            var order = [];
             jQuery.each(this.order, function (index, obj) {
 
             });
@@ -206,20 +233,8 @@
             sql = sql + " OFFSET " + this.firstResult;
         }
 
-        var myCallback = function (transaction, resultSet) {
-            if (successCallback !== undefined) {
-                successCallback(transaction, resultSet);
-            }
-        };
-
-        var myErrorCallback = function (transaction, error) {
-            if (errorCallback !== undefined) {
-                errorCallback(transaction, error);
-            }
-        };
-
         var caller = function (tx) {
-            tx.executeSql(sql, args, myCallback, myErrorCallback);
+            tx.executeSql(sql, args, successCallback, errorCallback);
         };
 
         this.db.database.transaction(caller);
@@ -230,8 +245,8 @@
      *
      * @name JQueryDatabaseOrder
      *
-     * @param {String} property
-     * @param {Boolean} [isAscending]
+     * @param {String} property - The column whose values will be used to order results of the query.
+     * @param {Boolean} [isAscending] - Whether or not the values of the property will be ascending or descending.
      *
      * @constructor
      */
@@ -268,8 +283,8 @@
      *
      * @name JQueryDatabaseRestriction
      *
-     * @param {String} expr
-     * @param {Array} [args]
+     * @param {String} expr - An expression that defined a part of the where clause.
+     * @param {Array} [args] - SQL arguments to be applied to this part of the where clause at query execution time.
      *
      * @constructor
      */
@@ -287,7 +302,7 @@
      *
      * @name JQueryDatabaseException
      *
-     * @param {String} message
+     * @param {String} message - The error message.
      *
      * @constructor
      */
@@ -317,7 +332,7 @@
      *
      * @name JQueryDatabase
      *
-     * @param {Database} database
+     * @param {Database} database - The Web SQL database object.
      *
      * @constructor
      */
@@ -334,8 +349,8 @@
      * @function
      * @memberOf JQueryDatabase
      *
-     * @param oldVersion
-     * @param newVersion
+     * @param oldVersion - The version of the database before execution of the migration.
+     * @param newVersion - The version of the database when migration execution is complete.
      * @param {SQLTransactionCallback|Function} callback
      *
      * @return {JQueryDatabase}
@@ -430,12 +445,35 @@
     };
 
     /**
+     * Specification for the column to be created.
+     *
+     * @typedef {Object} JQueryDatabase~CreateTableParamsColumns
+     *
+     * @property {String} name - The name of the column.
+     * @property {String} [type] - The data type of the column.
+     * @property {String} [constraint] - The constraints to be applied to the column.
+     */
+
+    /**
+     * Parameters for table creation.
+     *
+     * @typedef {Object} JQueryDatabase~CreateTableParams
+     *
+     * @property {String} name - The name of the table.
+     * @property {Array.<JQueryDatabase~CreateTableParamsColumns|String>} columns - The specifications for the columns to be created.
+     * @property {String[]} [constraints] - The constraints to be applied to the table.
+     * @property {String} [dropOrIgnore] - To drop or ignore existing tables.  (Must be one of "drop", "ignore" or undefined.)
+     * @property {SQLStatementCallback|Function} [done] - The callback for completed table creation.
+     * @property {SQLStatementErrorCallback|Function} [fail] - The callback for failed table creation.
+     */
+
+    /**
      * Creates a new table
      *
      * @function
      * @memberOf JQueryDatabase
      *
-     * @param {{name: String, columns: Array<{name: String, type: String, constraint: String}>, constraints: Array<String>, dropOrIgnore: String, done: SQLStatementCallback|Function, fail: SQLStatementErrorCallback|Function}} params
+     * @param {JQueryDatabase~CreateTableParams} params - The parameters specifying the table to create and associated callbacks.
      *
      * @return {JQueryDatabase}
      */
@@ -504,12 +542,23 @@
     };
 
     /**
+     * Parameters for table removal.
+     *
+     * @typedef {Object} JQueryDatabase~DropTableParams
+     *
+     * @property {String} name - The name of the table.
+     * @property {Boolean} [ignore] - Whether or not to ignore tables that do not exist.
+     * @property {SQLStatementCallback|Function} [done] - The callback for completed table creation.
+     * @property {SQLStatementErrorCallback|Function} [fail] - The callback for failed table creation.
+     */
+
+    /**
      * Drops an existing table
      *
      * @function
      * @memberOf JQueryDatabase
      *
-     * @param {{name: String, ignore: Boolean, done: SQLStatementCallback|Function, fail: SQLStatementErrorCallback|Function}} params
+     * @param {JQueryDatabase~DropTableParams} params - The parameters specifying the table to drop and associated callbacks.
      *
      * @returns {JQueryDatabase}
      */
@@ -544,13 +593,23 @@
     };
 
     /**
+     * Parameters for inserting data into a table.
+     *
+     * @typedef {Object} JQueryDatabase~InsertParams
+     *
+     * @property {{}} data - The data to be inserted into the database.
+     * @property {SQLStatementCallback|Function} [successCallback] - The callback for completed queries.
+     * @property {SQLStatementErrorCallback|Function} [errorCallback] - The callback for failed queries.
+     */
+
+    /**
      * Inserts a new row into a table
      *
      * @function
      * @memberOf JQueryDatabase
      *
-     * @param {String} tableName
-     * @param {{data: {}, done: SQLStatementCallback|Function, fail: SQLStatementErrorCallback|Function}} params
+     * @param {String} tableName - The name of the table where data will be inserted.
+     * @param {JQueryDatabase~InsertParams} params - The parameters specifying the data to be inserted and associated callbacks.
      *
      * @returns {JQueryDatabase}
      */
@@ -590,7 +649,7 @@
      * @function
      * @memberOf JQueryDatabase
      *
-     * @param {String} tableName
+     * @param {String} tableName - The name of the table where data will be inserted.
      * @returns {JQueryDatabaseCriteria}
      */
     JQueryDatabase.prototype.criteria = function (tableName) {
@@ -603,28 +662,16 @@
      * @function
      * @memberOf JQueryDatabase
      *
-     * @param {String} sql
-     * @param {Array} [args]
-     * @param {SQLStatementCallback|Function} [callback]
-     * @param {SQLStatementErrorCallback|Function} [errorCallback]
+     * @param {String} sql - The SQL statement.
+     * @param {Array} [args] - Array of arguments for the SQL statement.
+     * @param {SQLStatementCallback|Function} [successCallback] - The callback for completed queries.
+     * @param {SQLStatementErrorCallback|Function} [errorCallback] - The callback for failed queries.
      * @private
      */
-    JQueryDatabase.prototype._execute = function (sql, args, callback, errorCallback) {
-        var myCallback = function (transaction, resultSet) {
-            if (callback !== undefined) {
-                callback(transaction, resultSet);
-            }
-        };
-
-        var myErrorCallback = function (transaction, error) {
-            if (errorCallback !== undefined) {
-                errorCallback(transaction, error);
-            }
-        };
-
-        var caller = function (tx) {
+    JQueryDatabase.prototype._execute = function (sql, args, successCallback, errorCallback) {
+        var caller = function (transaction) {
             args = args || [];
-            tx.executeSql(sql, args, myCallback, myErrorCallback);
+            transaction.executeSql(sql, args, successCallback, errorCallback);
         };
 
         this.database.transaction(caller);
@@ -638,7 +685,7 @@
      * @name JQueryDatabase_CreationCallback
      * @function
      *
-     * @param JQueryDatabase
+     * @param {JQueryDatabase} db - A connection to the database.
      */
 
     /**
@@ -648,11 +695,11 @@
      * @function
      * @memberOf jQuery
      *
-     * @param {String} shortName
-     * @param {String} version
-     * @param {String} displayName
-     * @param {Number} maxSize
-     * @param {JQueryDatabase_CreationCallback} [creationCallback]
+     * @param {String} shortName - The database name
+     * @param {String} version - The version number
+     * @param {String} displayName - The text description
+     * @param {Number} maxSize - The size of the database
+     * @param {JQueryDatabase_CreationCallback} [creationCallback] - The creation callback will be called if the database is being created.
      *
      * @returns {undefined|JQueryDatabase}
      */
@@ -685,8 +732,9 @@
      * @function
      * @memberOf jQuery
      *
-     * @param {String} property
-     * @param {Boolean} isAscending
+     * @param {String} property - The column whose values will be used to order results of the query.
+     * @param {Boolean} [isAscending] - Whether or not the values of the property will be ascending or descending.
+     *
      * @return JQueryDatabaseOrder
      */
     jQuery.db.order = function (property, isAscending) {
@@ -701,7 +749,8 @@
          * @function
          * @memberOf jQuery
          *
-         * @param {String} property
+         * @param {String} property - The column whose values will be used to order results of the query.
+         *
          * @returns {JQueryDatabaseOrder}
          */
         asc: function (property) {
@@ -715,7 +764,7 @@
          * @function
          * @memberOf jQuery
          *
-         * @param {String} property
+         * @param {String} property - The column whose values will be used to order results of the query.
          * @returns {JQueryDatabaseOrder}
          */
         desc: function (property) {
@@ -730,8 +779,9 @@
      * @function
      * @memberOf jQuery
      *
-     * @param {String} expr
-     * @param {Array} args
+     * @param {String} expr - An expression that defined a part of the where clause.
+     * @param {Array} args - SQL arguments to be applied to this part of the where clause at query execution time.
+     *
      * @returns {JQueryDatabaseRestriction}
      */
     jQuery.db.restriction = function (expr, args) {
@@ -746,7 +796,8 @@
          * @function
          * @memberOf jQuery
          *
-         * @param object
+         * @param {{}} object - A map from property names to values.
+         *
          * @returns {JQueryDatabaseRestriction}
          */
         allEq: function (object) {
@@ -768,6 +819,7 @@
          *
          * @param {JQueryDatabaseCriteria} criteriaA
          * @param {JQueryDatabaseCriteria} criteriaB
+         *
          * @returns {JQueryDatabaseRestriction}
          */
         and: function (criteriaA, criteriaB) {
@@ -787,6 +839,7 @@
          * @param {String} property
          * @param {*} lowValue
          * @param {*} highValue
+         *
          * @returns {JQueryDatabaseRestriction}
          */
         between: function (property, lowValue, highValue) {
@@ -806,6 +859,7 @@
          *
          * @param {String} property
          * @param {*} value
+         *
          * @returns {JQueryDatabaseRestriction}
          */
         eq: function (property, value) {
@@ -821,6 +875,7 @@
          *
          * @param {String} property
          * @param {String} otherProperty
+         *
          * @returns {JQueryDatabaseRestriction}
          */
         eqProperty: function (property, otherProperty) {
@@ -836,6 +891,7 @@
          *
          * @param {String} property
          * @param {*} value
+         *
          * @returns {JQueryDatabaseRestriction}
          */
         ge: function (property, value) {
@@ -851,6 +907,7 @@
          *
          * @param {String} property
          * @param {String} otherProperty
+         *
          * @returns {JQueryDatabaseRestriction}
          */
         geProperty: function (property, otherProperty) {
@@ -866,6 +923,7 @@
          *
          * @param {String} property
          * @param {*} value
+         *
          * @returns {JQueryDatabaseRestriction}
          */
         gt: function (property, value) {
@@ -881,6 +939,7 @@
          *
          * @param property
          * @param {String} otherProperty
+         *
          * @returns {JQueryDatabaseRestriction}
          */
         gtProperty: function (property, otherProperty) {
@@ -895,6 +954,7 @@
          * @memberOf jQuery
          *
          * @param value
+         *
          * @returns {JQueryDatabaseRestriction}
          */
         idEq: function (value) {
@@ -914,6 +974,7 @@
          *
          * @param property
          * @param values
+         *
          * @returns {JQueryDatabaseRestriction}
          */
         "in": function (property, values) {
@@ -933,6 +994,7 @@
          * @memberOf jQuery
          *
          * @param property
+         *
          * @returns {JQueryDatabaseRestriction}
          */
         isEmpty: function (property) {
@@ -947,6 +1009,7 @@
          * @memberOf jQuery
          *
          * @param property
+         *
          * @returns {JQueryDatabaseRestriction}
          */
         isNotEmpty: function (property) {
@@ -961,6 +1024,7 @@
          * @memberOf jQuery
          *
          * @param property
+         *
          * @returns {JQueryDatabaseRestriction}
          */
         isNotNull: function (property) {
@@ -975,6 +1039,7 @@
          * @memberOf jQuery
          *
          * @param property
+         *
          * @returns {JQueryDatabaseRestriction}
          */
         isNull: function (property) {
@@ -990,6 +1055,7 @@
          *
          * @param {String} property
          * @param {*} value
+         *
          * @returns {JQueryDatabaseRestriction}
          */
         le: function (property, value) {
@@ -1005,6 +1071,7 @@
          *
          * @param {String} property
          * @param {String} otherProperty
+         *
          * @returns {JQueryDatabaseRestriction}
          */
         leProperty: function (property, otherProperty) {
@@ -1020,6 +1087,8 @@
          *
          * @param {String} property
          * @param {*} value
+         *
+         * @returns {JQueryDatabaseRestriction}
          */
         like: function (property, value) {
             return new JQueryDatabaseRestriction(property + " LIKE ?", [value]);
@@ -1034,6 +1103,7 @@
          *
          * @param {String} property
          * @param {*} value
+         *
          * @returns {JQueryDatabaseRestriction}
          */
         lt: function (property, value) {
@@ -1049,6 +1119,7 @@
          *
          * @param property
          * @param {String} otherProperty
+         *
          * @returns {JQueryDatabaseRestriction}
          */
         ltProperty: function (property, otherProperty) {
@@ -1064,6 +1135,7 @@
          *
          * @param {String} property
          * @param {*} value
+         *
          * @returns {JQueryDatabaseRestriction}
          */
         ne: function (property, value) {
@@ -1079,6 +1151,7 @@
          *
          * @param property
          * @param {String} otherProperty
+         *
          * @returns {JQueryDatabaseRestriction}
          */
         neProperty: function (property, otherProperty) {
@@ -1093,6 +1166,7 @@
          * @memberOf jQuery
          *
          * @param {JQueryDatabaseCriteria} criteria
+         *
          * @returns {JQueryDatabaseRestriction}
          */
         not: function (criteria) {
@@ -1110,6 +1184,7 @@
          *
          * @param {JQueryDatabaseCriteria} criteriaA
          * @param {JQueryDatabaseCriteria} criteriaB
+         *
          * @returns {JQueryDatabaseRestriction}
          */
         or: function (criteriaA, criteriaB) {
