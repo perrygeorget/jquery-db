@@ -113,7 +113,7 @@
      */
     JQueryDatabaseCriteria.prototype.list = function (successCallback, errorCallback) {
         var sql = "SELECT _ROWID_, * FROM " + this.tableName;
-        this._executeCriteria(sql, successCallback, errorCallback);
+        this._executeCriteria(sql, undefined, successCallback, errorCallback);
         return this;
     };
 
@@ -130,7 +130,7 @@
      */
     JQueryDatabaseCriteria.prototype.count = function (successCallback, errorCallback) {
         var sql = "SELECT COUNT(*) AS count FROM " + this.tableName;
-        this._executeCriteria(sql, successCallback, errorCallback);
+        this._executeCriteria(sql, undefined, successCallback, errorCallback);
         return this;
     };
 
@@ -147,8 +147,6 @@
      * @returns {JQueryDatabaseCriteria}
      */
     JQueryDatabaseCriteria.prototype.update = function (data, successCallback, errorCallback) {
-        data = data || {};
-
         var values = [];
         var assignments = [];
 
@@ -158,7 +156,7 @@
         });
 
         var sql = "UPDATE " + this.tableName + " SET " + assignments.join(",");
-        this._executeCriteria(sql, successCallback, errorCallback);
+        this._executeCriteria(sql, values, successCallback, errorCallback);
         return this;
     };
 
@@ -175,7 +173,7 @@
      */
     JQueryDatabaseCriteria.prototype.destroy = function (successCallback, errorCallback) {
         var sql = "DELETE FROM " + this.tableName;
-        this._executeCriteria(sql, successCallback, errorCallback);
+        this._executeCriteria(sql, undefined,  successCallback, errorCallback);
         return this;
     };
 
@@ -208,13 +206,14 @@
      * @memberOf JQueryDatabaseCriteria
      *
      * @param {String} sql - The unfiltered unrestricted statement.
+     * @param {Array} args - Arguments for the unfiltered unrestricted statement.
      * @param {SQLStatementCallback|Function} [successCallback] - The callback for completed queries.
      * @param {SQLStatementErrorCallback|Function} [errorCallback] - The callback for failed queries.
      *
      * @private
      */
-    JQueryDatabaseCriteria.prototype._executeCriteria = function (sql, successCallback, errorCallback) {
-        var args = [];
+    JQueryDatabaseCriteria.prototype._executeCriteria = function (sql, args, successCallback, errorCallback) {
+        args = args || [];
 
         if (this.restrictions.length > 0) {
             var whereClause = this._getWhereClause(args);
@@ -226,10 +225,10 @@
             });
             sql = sql + " ORDER BY " + this.order.join(",");
         }
-        if (typeof this.maxResults === "Number") {
+        if (typeof this.maxResults === "number") {
             sql = sql + " LIMIT " + this.maxResults;
         }
-        if (this.firstResult > 0) {
+        if ((typeof this.firstResult === "number") && (this.firstResult > 0)) {
             sql = sql + " OFFSET " + this.firstResult;
         }
 
@@ -423,9 +422,7 @@
             len = resultSet.rows.length;
             for (i = 0; i < len; i = i + 1) {
                 var item = resultSet.rows.item(i);
-                if (item.name !== "__WebKitDatabaseInfoTable__" && item.name !== "sqlite_sequence") {
-                    tables.push(item.name);
-                }
+                tables.push(item.name);
             }
 
             if (typeof callback === "function") {
@@ -614,8 +611,6 @@
      * @returns {JQueryDatabase}
      */
     JQueryDatabase.prototype.insert = function (tableName, params) {
-        params = params || {};
-
         var values = [];
         var columns = [];
         var placeholders = [];

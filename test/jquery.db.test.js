@@ -612,7 +612,14 @@ test("Has just 1 table", 1, function () {
         window.clearTimeout(tablesTimeout);
         tablesTimeout = undefined;
 
-        equal(tables.length, 1, msg);
+        var realTables = [];
+        for (var i = 0; i < tables.length; i++) {
+            if (tables[i] !== "__WebKitDatabaseInfoTable__" && tables[i] !== "sqlite_sequence") {
+                realTables.push(tables[i]);
+            }
+        }
+
+        equal(realTables.length, 1, msg);
         start();
     });
 }, true);
@@ -631,7 +638,14 @@ test("Has the expected table", 1, function () {
         window.clearTimeout(tablesTimeout);
         tablesTimeout = undefined;
 
-        equal(tables[0], "MyTestTable", msg);
+        var realTables = [];
+        for (var i = 0; i < tables.length; i++) {
+            if (tables[i] !== "__WebKitDatabaseInfoTable__" && tables[i] !== "sqlite_sequence") {
+                realTables.push(tables[i]);
+            }
+        }
+
+        deepEqual(realTables, ["MyTestTable"], msg);
         start();
     });
 }, true);
@@ -716,7 +730,14 @@ test("Has just 2 tables", 1, function () {
         window.clearTimeout(tablesTimeout);
         tablesTimeout = undefined;
 
-        equal(tables.length, 2, msg);
+        var realTables = [];
+        for (var i = 0; i < tables.length; i++) {
+            if (tables[i] !== "__WebKitDatabaseInfoTable__" && tables[i] !== "sqlite_sequence") {
+                realTables.push(tables[i]);
+            }
+        }
+
+        equal(realTables.length, 2, msg);
         start();
     });
 }, true);
@@ -734,7 +755,14 @@ test("Has the expected tables", 1, function () {
     db.tables(function (tables) {
         window.clearTimeout(tablesTimeout);
 
-        deepEqual(tables, ["MyTestTable1", "MyTestTable2"], msg);
+        var realTables = [];
+        for (var i = 0; i < tables.length; i++) {
+            if (tables[i] !== "__WebKitDatabaseInfoTable__" && tables[i] !== "sqlite_sequence") {
+                realTables.push(tables[i]);
+            }
+        }
+
+        deepEqual(realTables, ["MyTestTable1", "MyTestTable2"], msg);
         start();
     });
 }, true);
@@ -1185,7 +1213,7 @@ module("Can select data", {
                     done: function () {
                         db.insert(tableName, {
                             data: {
-                                name: "John Doe",
+                                name: "John Doe, Jr.",
                                 rank: "Private",
                                 male: 1,
                                 age: 18
@@ -1278,6 +1306,60 @@ test("Can select everything", 1, function () {
     };
 
     db.criteria(tableName).list(success, error);
+}, true);
+
+test("Can select everything limited to 1", 1, function () {
+    var db = $.db(shortName, version, displayName, maxSize);
+    var tableName = "MyTestTable";
+
+    var success = function (transaction, resultSet) {
+        equal(resultSet.rows.length, 1, "Expected 1 record");
+        var person = resultSet.rows.item(0);
+        start();
+    };
+
+    var error = function (transaction, error) {
+        ok(false, error.message);
+        start();
+    };
+
+    db.criteria(tableName).setMaxResults(1).list(success, error);
+}, true);
+
+test("Can select everything limited to 1 offset by 1 order by name (ASC)", 1, function () {
+    var db = $.db(shortName, version, displayName, maxSize);
+    var tableName = "MyTestTable";
+
+    var success = function (transaction, resultSet) {
+        var person = resultSet.rows.item(0);
+        equal("Jane Doe", person.name, "Expected the second name in from A-Z order.");
+        start();
+    };
+
+    var error = function (transaction, error) {
+        ok(false, error.message);
+        start();
+    };
+
+    db.criteria(tableName).setMaxResults(1).setFirstResult(1).addOrder($.db.order.asc("name")).list(success, error);
+}, true);
+
+test("Can select everything limited to 1 offset by 1 order by name (DESC)", 1, function () {
+    var db = $.db(shortName, version, displayName, maxSize);
+    var tableName = "MyTestTable";
+
+    var success = function (transaction, resultSet) {
+        var person = resultSet.rows.item(0);
+        equal("John Doe", person.name, "Expected the second name in from Z-A order.");
+        start();
+    };
+
+    var error = function (transaction, error) {
+        ok(false, error.message);
+        start();
+    };
+
+    db.criteria(tableName).setMaxResults(1).setFirstResult(1).addOrder($.db.order.desc("name")).list(success, error);
 }, true);
 
 test("Can select John Doe", 2, function () {
@@ -1442,7 +1524,7 @@ test("Can delete everything", 1, function () {
     db.criteria(tableName).destroy(success, error);
 }, true);
 
-test("Can delete John Doe", 1, function () {
+test("Can delete one", 1, function () {
     var db = $.db(shortName, version, displayName, maxSize);
     var tableName = "MyTestTable";
 
@@ -1457,4 +1539,174 @@ test("Can delete John Doe", 1, function () {
     };
 
     db.criteria(tableName).add($.db.restriction.eq("name", "Jackie Robinson")).destroy(success, error);
+}, true);
+
+
+module("Can update data", {
+    setup: function () {
+        stop(3);
+        var db = $.db(shortName, version, displayName, maxSize);
+        var tableName = "MyTestTable";
+        db.dropTable({
+            name: tableName,
+            ignore: true,
+            done: function () {
+                db.createTable({
+                    name: tableName,
+                    columns: [
+                        {
+                            name: "id",
+                            type: "INTEGER",
+                            constraint: "PRIMARY KEY AUTOINCREMENT"
+                        },
+                        {
+                            name: "name",
+                            type: "TEXT",
+                            constraint: "NOT NULL"
+                        },
+                        {
+                            name: "rank",
+                            type: "TEXT",
+                            constraint: "NOT NULL"
+                        },
+                        {
+                            name: "male",
+                            type: "INT",
+                            constraint: "NOT NULL"
+                        },
+                        {
+                            name: "age",
+                            type: "INT",
+                            constraint: "NOT NULL"
+                        }
+                    ],
+                    done: function () {
+                        db.insert(tableName, {
+                            data: {
+                                name: "John Doe",
+                                rank: "Private",
+                                male: 1,
+                                age: 18
+                            },
+                            done: function () {
+                                start();
+                            },
+                            fail: function () {
+                                start();
+                            }
+                        }).insert(tableName, {
+                            data: {
+                                name: "James Doe",
+                                rank: "Private",
+                                male: 1,
+                                age: 18
+                            },
+                            done: function () {
+                                start();
+                            },
+                            fail: function () {
+                                start();
+                            }
+                        }).insert(tableName, {
+                            data: {
+                                name: "Jackie Robinson",
+                                rank: "General",
+                                male: 1,
+                                age: 42
+                            },
+                            done: function () {
+                                start();
+                            },
+                            fail: function () {
+                                start();
+                            }
+                        }).insert(tableName, {
+                            data: {
+                                name: "John Doe",
+                                rank: "Commander",
+                                male: 1,
+                                age: 55
+                            },
+                            done: function () {
+                                start();
+                            },
+                            fail: function () {
+                                start();
+                            }
+                        });
+                    },
+                    fail: function () {
+                        start(4);
+                    }
+                });
+            },
+            fail: function () {
+                start(4);
+            }
+        });
+    },
+    teardown: function () {
+        stop(1);
+        $.db(shortName, version, displayName, maxSize)
+            .dropTable({
+                name: "MyTestTable",
+                ignore: true,
+                done: function () {
+                    start();
+                },
+                fail: function () {
+                    start();
+                }
+            });
+    }
+});
+
+test("Can update everything", 2, function () {
+    var db = $.db(shortName, version, displayName, maxSize);
+    var tableName = "MyTestTable";
+
+    var success = function (transaction, resultSet) {
+        equal(resultSet.rowsAffected, 4, "Expected 4 records");
+        start();
+    };
+
+    var error = function (transaction, error) {
+        ok(false, error.message);
+        start();
+    };
+
+    var data = {male: 0};
+    db.criteria(tableName).update(data, success, error);
+
+    stop();
+
+    db.criteria(tableName).add($.db.restriction.eq("male", 0)).list(function(transaction, resultSet) {
+        equal(resultSet.rows.length, 4, "All 4 should have been updated.");
+        start();
+    }, error);
+}, true);
+
+test("Can update one", 2, function () {
+    var db = $.db(shortName, version, displayName, maxSize);
+    var tableName = "MyTestTable";
+
+    var success = function (transaction, resultSet) {
+        equal(resultSet.rowsAffected, 1, "Expected 1 records");
+        start();
+    };
+
+    var error = function (transaction, error) {
+        ok(false, error.message);
+        start();
+    };
+
+    var data = {male: 0};
+    db.criteria(tableName).add($.db.restriction.eq("name", "Jackie Robinson")).update(data, success, error);
+
+    stop();
+
+    db.criteria(tableName).add($.db.restriction.eq("male", 0)).list(function(transaction, resultSet) {
+        equal(resultSet.rows.length, 1, "Only one should have been updated.");
+        start();
+    }, error);
 }, true);
