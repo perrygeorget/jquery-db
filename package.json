@@ -40,6 +40,7 @@
         "grunt-qunit-istanbul": "~0.1.1",
         "grunt-contrib-clean": "~0.4.0",
         "grunt-contrib-copy": "~0.5.0",
-        "jsdoc": "~3.3.0"
+        "jsdoc": "~3.3.0",
+        "temporary": "0.0.7"
     }
 }

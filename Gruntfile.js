@@ -2,7 +2,12 @@
 
 'use strict';
 
+var tmp = require('temporary');
+
 module.exports = function (grunt) {
+    var dir = new tmp.Dir();
+    // console.log(dir.path);
+
     // Project configuration.
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
@@ -47,6 +52,7 @@ module.exports = function (grunt) {
         qunit: {
             options: {
                 '--web-security': 'no',
+                '--local-storage-path': dir.path,
                 coverage: {
                     src: ['src/**/*.js'],
                     instrumentedFiles: 'temp/',
