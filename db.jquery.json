@@ -1,0 +1,22 @@
+{
+    "name": "DB",
+    "version": "0.1.0",
+    "title": "WebDatabase (WebSQL) Plugin",
+    "author": {
+        "name": "George Perry"
+    },
+    "licenses": [
+        {
+            "type": "GPLv2",
+            "url": "http://opensource.org/licenses/GPL-2.0"
+        }
+    ],
+    "dependencies": {
+        "jquery": ">=1.6.0"
+    },
+    "keywords": ["webdatabase", "websql", "offline", "storage", "orm"],
+    "homepage": "https://github.com/perrygeorget/jquery-db",
+    "docs": "https://github.com/perrygeorget/jquery-db/wiki",
+    "bugs": "https://github.com/perrygeorget/jquery-db/issues",
+    "download": "https://github.com/perrygeorget/jquery-db/tree/master/dist"
+}
