@@ -1,7 +1,7 @@
 {
     "name": "jquery.db",
     "description": "A HTML5 Client Side Database ORM for jQuery based on Hibernate",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "author": {
         "name": "George Perry",
         "url": "https://github.com/perrygeorget"
